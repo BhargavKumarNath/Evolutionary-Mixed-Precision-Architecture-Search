@@ -1,0 +1,5 @@
+pop_size: 50
+generations: 20
+crossover_prob: 0.5
+mutation_prob: 0.2
+tournament_size: 3
