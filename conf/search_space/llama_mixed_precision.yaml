@@ -1,0 +1,11 @@
+name: "layer_wise_mixed_precision"
+# For Llama-3-8B there are 32 transformer layers
+num_layers: 32
+
+# The available "alleles" (Bit-width coices) for each gene
+# 2: 2-bit, 4: 4-bit, 8: 8-bit, 16: FP16 (Baseline)
+choices: [2, 4, 8, 16]
+
+# Constraints 
+min_avg_bitwidth: 2.5
+

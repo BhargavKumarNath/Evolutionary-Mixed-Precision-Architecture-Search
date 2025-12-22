@@ -1,0 +1,11 @@
+defaults:
+  - search_space: llama_mixed_precision
+  - _self_
+
+project_name: "EMPAS"
+seed: 42
+
+# Global Settings
+model_type: "llama"
+target_device: "cuda"
+
