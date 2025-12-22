@@ -33,7 +33,6 @@ def mutate_random_gene(genome: Genome, search_space: MixedPrecisionSearchSpace, 
     for i in range(len(new_genes)):
         if random.random() < mutation_rate:
             # Pick a new choice from the search space
-            # Ensure we don't pick the same one (optional, but efficient)
             current = new_genes[i]
             possible_choices = [c for c in search_space.choices if c != current]
             if possible_choices:
