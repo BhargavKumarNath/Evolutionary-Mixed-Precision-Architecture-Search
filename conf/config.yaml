@@ -9,3 +9,7 @@ seed: 42
 model_type: "llama"
 target_device: "cuda"
 
+evaluator:
+  type: "dummy"
+  batch_size: 1
+  seq_len: 128
