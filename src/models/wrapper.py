@@ -12,7 +12,7 @@ class ModelWrapper:
 
         # Load model in FP16 to save memory immediately
         self.model = AutoModelForCausalLM.from_pretrained(
-            model_name, torch_dtype=torch.float16, device_map=device, low_cpu_mem_usage=True
+            model_name, dtype=torch.float16, device_map=device, low_cpu_mem_usage=True
         )
         self.model.eval()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)

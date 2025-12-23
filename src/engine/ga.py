@@ -7,7 +7,7 @@ import logging
 from dataclasses import asdict
 from ..core.search_space import SearchSpace, Genome
 from ..core.evaluator import Evaluator, FitnessMetrics
-from .pareto import get_pareto_front
+from .pareto import dominates, get_pareto_front
 from .operators import crossover_uniform, mutate_random_gene
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,6 @@ class GAEngine:
     
     def _dominates(self, f1: FitnessMetrics, f2: FitnessMetrics) -> bool:
         """Wrapper for dominance logic defined in pareto.py or inline"""
-        from .pareto import dominates
         return dominates(f1, f2)
     
     def step(self, generation: int):
