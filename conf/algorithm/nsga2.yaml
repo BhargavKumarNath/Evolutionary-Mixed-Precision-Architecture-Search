@@ -1,0 +1,8 @@
+name: "nsga2_simple"
+pop_size: 20            # Small for testing, will increase for real search
+n_generations: 10
+crossover_rate: 0.9
+mutation_rate: 0.1
+tournament_size: 3
+elite_size: 2           # Number of top solutions to force into next gen
+checkpoint_freq: 1      # Save every N generations
