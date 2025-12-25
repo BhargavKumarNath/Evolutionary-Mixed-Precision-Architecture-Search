@@ -11,6 +11,6 @@ model_type: "llama"
 target_device: "cuda"
 
 evaluator:
-  type: "dummy"
-  batch_size: 1
-  seq_len: 128
+  type: "proxy"
+  profile_path: "./data/profiles/tinyllama_sensitivity.json"
+
