@@ -1,0 +1,26 @@
+search_space:
+  name: layer_wise_mixed_precision
+  num_layers: 32
+  choices:
+  - 2
+  - 4
+  - 8
+  - 16
+  min_avg_bitwidth: 2.5
+algorithm:
+  name: nsga2_simple
+  pop_size: 20
+  n_generations: 10
+  crossover_rate: 0.9
+  mutation_rate: 0.1
+  tournament_size: 3
+  elite_size: 2
+  checkpoint_freq: 1
+project_name: EMPAS
+seed: 42
+model_type: llama
+target_device: cuda
+evaluator:
+  type: dummy
+  batch_size: 1
+  seq_len: 128
