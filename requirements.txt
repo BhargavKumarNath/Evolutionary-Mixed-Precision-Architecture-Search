@@ -5,3 +5,7 @@ sentencepiece
 wandb
 matplotlib
 plotly
+fastapi
+uvicorn
+pydantic
+requests
