@@ -354,7 +354,7 @@ with tab1:
         )
         
         fig.update_layout(height=500, hovermode='closest')
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='content')
         
     with col2:
         st.subheader("🏆 Elite Architectures")
@@ -408,7 +408,7 @@ with tab1:
     fig2.update_yaxes(title_text="VRAM (MB)", row=1, col=2)
     
     fig2.update_layout(height=400, showlegend=False)
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width='content')
 
 # TAB 2: Architecture Inspector
 with tab2:
@@ -451,7 +451,7 @@ with tab2:
                       annotation_text=f"Average: {avg_bits:.1f} bits")
         
         fig3.update_layout(height=400)
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3, width='content')
         
         # Bit distribution
         st.subheader("Bit-Width Distribution")
@@ -463,7 +463,7 @@ with tab2:
             color_discrete_sequence=['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71'],
             title="Quantization Strategy Breakdown"
         )
-        st.plotly_chart(fig4, use_container_width=True)
+        st.plotly_chart(fig4, width='content')
     
     with col2:
         st.subheader("📋 Configuration Details")
@@ -493,7 +493,7 @@ with tab2:
             ]
         })
         
-        st.dataframe(stats_df, use_container_width=True, hide_index=True)
+        st.dataframe(stats_df, width='content', hide_index=True)
         
         st.markdown("---")
         st.markdown("### 🎨 Bit-Width Legend")
@@ -584,7 +584,7 @@ with tab3:
             "Speedup": "{:.2f}x",
             "Avg Bits": "{:.1f}"
         }),
-        use_container_width=True,
+        width='content',
         hide_index=True
     )
     
@@ -601,7 +601,7 @@ with tab3:
         selected_metrics = selected_data['metrics']
         selected_genes = [selected_data['config']['quantization_map'][f"layer_{i}"] for i in range(22)]
         
-        # Normalize (higher is better for all)
+        # Normalize
         selected_values = [
             1 - (selected_metrics['predicted_loss'] - 3.28) / 1.0,  # Accuracy
             1 - selected_metrics['predicted_vram_mb'] / 2200,  # Memory
@@ -635,7 +635,7 @@ with tab3:
             title="Performance Profile"
         )
         
-        st.plotly_chart(fig5, use_container_width=True)
+        st.plotly_chart(fig5, width='content')
     
     with col2:
         # Bar chart comparison
@@ -677,7 +677,7 @@ with tab3:
             height=400
         )
         
-        st.plotly_chart(fig6, use_container_width=True)
+        st.plotly_chart(fig6, width='content')
     
     # Key insights
     st.subheader("💡 Key Insights")
@@ -748,7 +748,7 @@ with tab4:
         with col_c:
             top_p = st.slider("Top-p", 0.1, 1.0, 0.9, 0.05)
         
-        generate_btn = st.button("🚀 Generate", type="primary", use_container_width=True)
+        generate_btn = st.button("🚀 Generate", type="primary", width='content')
         
         if generate_btn:
             with st.spinner("Generating response..."):
