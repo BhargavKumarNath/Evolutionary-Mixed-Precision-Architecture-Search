@@ -354,7 +354,17 @@ with tab1:
             showlegend=True
         )
         
-        fig.update_layout(height=500, hovermode='closest')
+        fig.update_layout(
+            height=500, 
+            hovermode='closest',
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
         st.plotly_chart(fig, width='content')
         
     with col2:
