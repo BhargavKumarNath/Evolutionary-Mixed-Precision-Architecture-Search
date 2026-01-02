@@ -908,10 +908,3 @@ with col2:
     - Streamlit Dashboard
     """)
 
-with col3:
-    st.markdown("""
-    ### 📖 Resources
-    - [GitHub Repository](#)
-    - [Technical Report](#)
-    - [API Documentation](#)
-    """)
