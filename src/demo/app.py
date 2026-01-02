@@ -59,6 +59,7 @@ st.markdown("""
     }
     .info-box {
         background-color: #f0f2f6;
+        color: #000000; /* ADDED: Force black text on light background */
         padding: 1rem;
         border-radius: 0.5rem;
         border-left: 4px solid #667eea;
@@ -66,6 +67,7 @@ st.markdown("""
     }
     .warning-box {
         background-color: #fff3cd;
+        color: #000000; /* ADDED: Force black text on light background */
         padding: 1rem;
         border-radius: 0.5rem;
         border-left: 4px solid #ffc107;
@@ -73,7 +75,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 # Generate mock data if needed
 def generate_mock_search_data():
     """Generate realistic mock data for demo purposes"""
