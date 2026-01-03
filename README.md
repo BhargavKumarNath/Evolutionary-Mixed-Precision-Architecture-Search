@@ -7,7 +7,7 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-App-red?logo=streamlit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-[🚀 Live Demo]((https://evolutionary-mixed-precision-search.streamlit.app/))
+[🚀 Live Demo](https://evolutionary-mixed-precision-search.streamlit.app/)
 
 # 1. Overview
 EMPAS (Evolutionary Mixed-Precision Architecture Search) is a production grade Neural Architecture Search (NAS) framework that automatically discovers Pareto-optimal quantisation strategies for Large Language Models. By formulating mixed-precision quantisations as a multi-objective optimisation problem and solving it via evolutionary algorithms, EMPAS achieves $35-45\%$ **memory reduction** with minimal accuracy degradation (<0.08 perplexity increase) on TinyLlama-1.1B.
