@@ -12,7 +12,7 @@ class SensitivityProfiler:
     def __init__(self, wrapper: ModelWrapper, dataset: List[torch.Tensor]):
         self.wrapper = wrapper
         self.dataset = dataset
-        self.choices = [2, 4, 8]
+        self.choices = [2, 4, 8, 16]
         
     def get_baseline_loss(self) -> float:
         total_loss = 0.0
