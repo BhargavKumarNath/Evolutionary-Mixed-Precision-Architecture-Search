@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 
+from ..models.quantization_backend import BitsAndBytesBackend
 from ..models.quantizer import fake_quantize_tensor
 from ..models.wrapper import ModelWrapper
 from ..utils.data import get_calibration_dataset
@@ -43,7 +44,9 @@ class Validator:
         seed: int = 42,
         dataset_split: str = "test",
         allow_synthetic_data: bool = False,
+        quantization_backend: str = "simulation",
     ):
+        self.quantization_backend = quantization_backend
         self.wrapper = ModelWrapper(model_name, device)
         self.dataset = get_calibration_dataset(
             model_name,
@@ -55,12 +58,20 @@ class Validator:
         )
     
     def apply_genome(self, genome: Genome):
-        """Aplies the mixed precision configuration to the loaded model"""
+        """Apply either numerical simulation or a configured real backend."""
         layers = self.wrapper.model.model.layers
         if len(genome.genes) != len(layers):
             raise ValueError(f"Genome length {len(genome.genes)} != Model layers {len(layers)}")
         
-        logger.info("Applying Mixed-Precision Quantization...")
+        if self.quantization_backend == "bitsandbytes":
+            backend = BitsAndBytesBackend(self.wrapper.device)
+            backend.quantize(self.wrapper.model, genome.genes)
+            logger.info("Applied bitsandbytes mixed-precision configuration: %s", genome.genes)
+            return
+        if self.quantization_backend != "simulation":
+            raise ValueError(f"Unknown quantization backend: {self.quantization_backend}")
+
+        logger.info("Applying numerical fake-quantization simulation...")
 
         for i, (layer, bits) in enumerate(zip(layers, genome.genes)):
             linear_modules = [m for m in layer.modules() if isinstance(m, nn.Linear)]

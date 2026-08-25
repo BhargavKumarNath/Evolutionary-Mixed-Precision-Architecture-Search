@@ -2,7 +2,7 @@ name: "layer_wise_mixed_precision"
 num_layers: 22
 
 # 2: 2-bit, 4: 4-bit, 8: 8-bit, 16: FP16 (Baseline)
-choices: [2, 4, 8, 16]
+choices: [4, 8, 16]
 
 # Constraints 
 min_avg_bitwidth: 2.5

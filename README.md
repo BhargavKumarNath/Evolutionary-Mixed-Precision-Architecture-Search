@@ -7,11 +7,13 @@
 
 > Current status: the existing search uses a numerical fake-quantization proxy. It does not yet produce a packed low-bit deployment model or demonstrate measured GPU memory reduction, latency improvement, or throughput improvement. Historical artifacts are not validated hardware results.
 
+Phase 4 adds an optional bitsandbytes backend for the detected NVIDIA GPU. It supports real 4-bit and 8-bit linear kernels plus FP16 passthrough; 2-bit deployment is not supported by this backend. Hardware benchmark results remain unmeasured until the benchmark protocol is completed.
+
 By formulating mixed-precision quantization as a multi-objective optimization problem solved via evolutionary algorithms (NSGA-II), EMPAS eliminates the need for manual, sub-optimal uniform quantization (e.g., blanket INT4).
 
 **Business Impact on TinyLlama-1.1B:**
 *   **Search objective:** explore quality and theoretical memory tradeoffs of layer-wise precision maps.
-*   **Deployment result:** unmeasured until a real low-bit backend and hardware benchmark are integrated.
+*   **Deployment result:** real bitsandbytes execution is available for supported maps; memory and performance results remain unmeasured.
 
 ---
 
@@ -125,6 +127,6 @@ streamlit run src/demo/app.py
 ---
 
 ## 7. Future Roadmap
-1.  **Custom CUDA Kernels:** EMPAS currently relies on `fake_quantize` for sensitivity measurements. Realizing native mixed-precision throughput requires integration with libraries like `bitsandbytes` or custom Triton kernels.
+1.  **Custom CUDA Kernels:** EMPAS sensitivity profiling still uses explicitly labeled numerical fake quantization, while supported deployment maps use bitsandbytes. Custom kernels should be considered only after hardware measurements identify a concrete bottleneck.
 2.  **Hardware-in-the-Loop Latency:** Replacing the latency proxy with an actual Look-Up Table (LUT) of measured tensor-core execution times on target edge architectures (e.g., Jetson AGX Orin).
 3.  **Scale Up:** Validate configuration stability on `Llama-3-8B` down-quantized to fit within standard consumer 8GB VRAM cards.

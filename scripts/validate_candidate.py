@@ -29,6 +29,7 @@ def main(cfg: DictConfig):
         seed=resolved_cfg["data"]["protocol"]["validation"]["seed"],
         dataset_split=resolved_cfg["data"]["protocol"]["validation"]["split"],
         allow_synthetic_data=resolved_cfg["data"]["allow_synthetic_data"],
+        quantization_backend=resolved_cfg["quantization"]["backend"],
     )
 
     # 2. Validator Baseline
@@ -53,6 +54,7 @@ def main(cfg: DictConfig):
         seed=resolved_cfg["data"]["protocol"]["validation"]["seed"],
         dataset_split=resolved_cfg["data"]["protocol"]["validation"]["split"],
         allow_synthetic_data=resolved_cfg["data"]["allow_synthetic_data"],
+        quantization_backend=resolved_cfg["quantization"]["backend"],
     )
 
     # 4. Validate Found Solution

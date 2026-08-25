@@ -11,6 +11,11 @@ deterministic: false
 model_name: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 model_revision: null
 
+quantization:
+  backend: "bitsandbytes"
+  group_size: 64
+  compute_dtype: "float16"
+
 # Global Settings
 model_type: "llama"
 target_device: "cuda"
