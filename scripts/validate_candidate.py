@@ -24,10 +24,10 @@ def main(cfg: DictConfig):
     validator = Validator(
         resolved_cfg["model_name"],
         device=resolved_cfg["target_device"],
-        seq_len=resolved_cfg["data"]["seq_len"],
-        nsamples=resolved_cfg["data"]["nsamples"],
-        seed=resolved_cfg["seed"],
-        dataset_split=resolved_cfg["data"]["split"],
+        seq_len=resolved_cfg["data"]["protocol"]["validation"]["seq_len"],
+        nsamples=resolved_cfg["data"]["protocol"]["validation"]["nsamples"],
+        seed=resolved_cfg["data"]["protocol"]["validation"]["seed"],
+        dataset_split=resolved_cfg["data"]["protocol"]["validation"]["split"],
         allow_synthetic_data=resolved_cfg["data"]["allow_synthetic_data"],
     )
 
@@ -48,10 +48,10 @@ def main(cfg: DictConfig):
     validator = Validator(
         resolved_cfg["model_name"],
         device=resolved_cfg["target_device"],
-        seq_len=resolved_cfg["data"]["seq_len"],
-        nsamples=resolved_cfg["data"]["nsamples"],
-        seed=resolved_cfg["seed"],
-        dataset_split=resolved_cfg["data"]["split"],
+        seq_len=resolved_cfg["data"]["protocol"]["validation"]["seq_len"],
+        nsamples=resolved_cfg["data"]["protocol"]["validation"]["nsamples"],
+        seed=resolved_cfg["data"]["protocol"]["validation"]["seed"],
+        dataset_split=resolved_cfg["data"]["protocol"]["validation"]["split"],
         allow_synthetic_data=resolved_cfg["data"]["allow_synthetic_data"],
     )
 

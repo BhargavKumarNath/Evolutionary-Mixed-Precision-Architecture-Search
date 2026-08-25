@@ -33,7 +33,7 @@ EMPAS eschews monolithic design in favor of decoupled, phase-based batch process
 ![alt text](system_design.svg)
 
 ### 2.1 Ingestion Layer (Calibration Data)
-To avoid overfitting the search engine to explicit sequences (data leakage), the ingestion layer (`src/utils/data.py`) acts as a deterministic sampler. Currently coupled to standard NLP datasets (e.g., Wikitext-2), it extracts and caches 128-token chunks via fixed RNG seeds. This provides the evolutionary engine with statistically representative distributions without the overhead of full dataset ingestion.
+The ingestion layer (`src/utils/data.py`) now defines named calibration, validation, and held-out test protocol splits. Each split is sampled deterministically and records sample IDs, token counts, and a fingerprint. The current Wikitext-2 implementation remains intentionally small and must not be treated as evidence of generalization until the final test protocol is run.
 
 ### 2.2 Transformation Engine (Offline Search)
 EMPAS operates the Heavy-Compute Search phase asynchronously from serving. 
@@ -61,14 +61,14 @@ A core principle of Staff-level design is acknowledging what the system delibera
    * **Decision:** Quantization architectures are serialized to `./deployment/artifacts/*.json` rather than pushing to MLflow or a relational database.
    * **Rationale:** Acknowledged "Hardcoded Fragility" is accepted to ensure the project runs seamlessly in edge, air-gapped, or zero-install GPU environments. This minimizes MLOps infrastructure hurdles for initial proofs-of-concept.
 3. **Zero-Cost Additive Proxy vs. Full Perplexity Evaluations:**
-   * **Decision:** The search algorithm evaluates fitness using an additive penalty derived from a single 128-token test, not full Wikitext perplexity.
+   * **Decision:** The search algorithm evaluates fitness using an additive penalty derived from the calibration split, not full Wikitext perplexity.
    * **Rationale:** We traded a marginal degree of true-loss accuracy for an $O(1)$ fitness function. This explicit proxy scaling boundary reduces the architectural search phase from $O(\text{Days})$ to $O(\text{Minutes})$.
 
 ## 4. Engineering Rigor & Methodologies
 
 EMPAS was built emphasizing reproducibility, scalability, and robust scientific methodology:
 
-*   **Validation Strategy (Data Leakage Prevention):** The proxy evaluator uses highly truncated calibration sets (128 tokens, $N=4$ batches) exclusively to measure relative signal degradation. This prevents the exact calibration sequence from overfitting the search engine to specific text distributions, mimicking zero-shot robustness.
+*   **Evaluation Protocol:** Search uses only the calibration split. Candidate validation uses a separate validation split, while the held-out test split is reserved for final reporting. Split identities and token fingerprints are persisted in the experiment manifest.
 *   **Why NSGA-II over DARTS / RL?** The quantization search space is discrete (hardware natively supports 2/4/8/16-bit blocks). Gradient-based NAS (DARTS) requires continuous relaxations that break down under rounding, and Reinforcement Learning suffers from abysmal sample efficiency. NSGA-II natively handles the non-differentiable, combinatorial nature of this space while naturally preserving population diversity.
 *   **Metric Selection:** Optimizing directly for *Throughput (Tokens/sec)* in a simulated environment introduces massive variance dependent on kernel implementations. EMPAS instead optimizes for absolute **VRAM constraints** and a deterministic **Weighted Latency Proxy**, ensuring stable and hardware-agnostic multi-objective convergence.
 *   **Current engineering status:** Hydra and optional W&B integration exist, but configuration authority, manifests, deterministic execution, and checkpoint provenance are being stabilized. Hardware validation and genuine low-bit execution are not yet complete.

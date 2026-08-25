@@ -63,6 +63,19 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
         raise ConfigurationError("seed must be a non-negative integer")
     if not resolved["target_device"]:
         raise ConfigurationError("target_device must not be empty")
+    data = resolved.get("data", {})
+    protocol = data.get("protocol", {})
+    if set(protocol) != {"calibration", "validation", "test"}:
+        raise ConfigurationError(
+            "data.protocol must define calibration, validation, and test splits"
+        )
+    for name, split_config in protocol.items():
+        if not split_config.get("split"):
+            raise ConfigurationError(f"data.protocol.{name}.split must not be empty")
+        if int(split_config.get("seq_len", 0)) <= 0:
+            raise ConfigurationError(f"data.protocol.{name}.seq_len must be positive")
+        if int(split_config.get("nsamples", 0)) <= 0:
+            raise ConfigurationError(f"data.protocol.{name}.nsamples must be positive")
     if resolved["evaluator"].get("type") not in {"proxy"}:
         raise ConfigurationError("evaluator.type must be 'proxy' during Phase 1")
     return resolved

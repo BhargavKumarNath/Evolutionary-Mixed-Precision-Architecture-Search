@@ -21,10 +21,23 @@ evaluator:
 
 data:
   dataset: "wikitext"
-  split: "test"
-  seq_len: 128
-  nsamples: 4
   allow_synthetic_data: false
+  protocol:
+    calibration:
+      split: "train"
+      seq_len: 128
+      nsamples: 4
+      seed: 42
+    validation:
+      split: "validation"
+      seq_len: 128
+      nsamples: 4
+      seed: 43
+    test:
+      split: "test"
+      seq_len: 128
+      nsamples: 4
+      seed: 44
 
 paths:
   search_output_dir: "./data/logs/search_tinyllama_wandb"

@@ -85,6 +85,13 @@ class Phase1Tests(unittest.TestCase):
             "seed": 42,
             "target_device": "cpu",
             "search_space": {"num_layers": 2, "choices": [4, 8]},
+            "data": {
+                "protocol": {
+                    "calibration": {"split": "train", "seq_len": 4, "nsamples": 1},
+                    "validation": {"split": "validation", "seq_len": 4, "nsamples": 1},
+                    "test": {"split": "test", "seq_len": 4, "nsamples": 1},
+                }
+            },
             "algorithm": {
                 "pop_size": 4,
                 "n_generations": 2,
