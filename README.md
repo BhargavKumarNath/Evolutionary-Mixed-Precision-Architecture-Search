@@ -3,13 +3,15 @@
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python) ![PyTorch](https://img.shields.io/badge/PyTorch-2.9.1-red?logo=pytorch) ![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow?logo=huggingface) ![CUDA](https://img.shields.io/badge/NVIDIA-CUDA-green?logo=nvidia) [![Live Demo](https://img.shields.io/badge/Live-Dashboard-brightgreen?style=for-the-badge)](https://evolutionary-mixed-precision-search.streamlit.app/)
 
 ## Executive Summary
-**EMPAS** is a production-grade Neural Architecture Search (NAS) framework designed to automatically discover Pareto-optimal, layer-wise mixed-precision quantization strategies for Large Language Models (LLMs). 
+**EMPAS** is a research prototype for discovering layer-wise mixed-precision configurations for Large Language Models (LLMs).
+
+> Current status: the existing search uses a numerical fake-quantization proxy. It does not yet produce a packed low-bit deployment model or demonstrate measured GPU memory reduction, latency improvement, or throughput improvement. Historical artifacts are not validated hardware results.
 
 By formulating mixed-precision quantization as a multi-objective optimization problem solved via evolutionary algorithms (NSGA-II), EMPAS eliminates the need for manual, sub-optimal uniform quantization (e.g., blanket INT4).
 
 **Business Impact on TinyLlama-1.1B:**
-*   **Memory Reduction:** Achieves **35-45% VRAM reduction** compared to FP16 baselines.
-*   **Accuracy Retention:** Outperforms naive uniform quantization by recovering critical signal loss, allowing deployment on constrained edge hardware without degrading perplexity. 
+*   **Search objective:** explore quality and theoretical memory tradeoffs of layer-wise precision maps.
+*   **Deployment result:** unmeasured until a real low-bit backend and hardware benchmark are integrated.
 
 ---
 
@@ -35,13 +37,13 @@ To avoid overfitting the search engine to explicit sequences (data leakage), the
 
 ### 2.2 Transformation Engine (Offline Search)
 EMPAS operates the Heavy-Compute Search phase asynchronously from serving. 
-*   **Zero-Cost Profiler:** Iterates through every linear layer of the Base Model, applying fake-quantization matrices ($\{2, 4, 8, 16\}$ bits) and caching the additive loss degradations locally.
+*   **Sensitivity profiler:** Iterates through every linear layer of the Base Model, applying numerical fake quantization for an additive search proxy.
 *   **Genetic Optimizer (NSGA-II):** Consumes the profiler's cached states to evolve "Genomes" mapping layers to bit-widths. The engine evaluates candidate fitness (Loss vs. VRAM limits) without executing memory-bound forward passes.
 *   **Artifact Export:** Resolves the Pareto Frontier into static JSON artifacts ("Balanced", "Max Compression"). These artifacts serve as an ultra-lightweight File-Based Model Registry.
 
 ### 2.3 Inference Service
 Model serving is handled by a horizontal, stateless API (`src/serving/main.py`) powered by FastAPI.
-On initialization, the service consumes a specified JSON artifact from the deployment registry, instantiates the foundational FP16 Base Model, and dynamically applies the exact mixed-precision bitmaps via masking before locking parameters for inference. 
+The current service path instantiates the FP16 base model and applies simulated weight perturbations. It is a demonstration path, not a genuinely quantized deployment service.
 
 ### 2.4 Monitoring & Feedback Loop (Roadmap)
 The current inference service performs localized latency measurement logging. Future work will formalize this boundary, exporting latency MS and output perplexity distributions to an aggregation layer (e.g., Prometheus) to detect hardware drift and trigger automated reconfiguration triggers.
@@ -69,15 +71,15 @@ EMPAS was built emphasizing reproducibility, scalability, and robust scientific 
 *   **Validation Strategy (Data Leakage Prevention):** The proxy evaluator uses highly truncated calibration sets (128 tokens, $N=4$ batches) exclusively to measure relative signal degradation. This prevents the exact calibration sequence from overfitting the search engine to specific text distributions, mimicking zero-shot robustness.
 *   **Why NSGA-II over DARTS / RL?** The quantization search space is discrete (hardware natively supports 2/4/8/16-bit blocks). Gradient-based NAS (DARTS) requires continuous relaxations that break down under rounding, and Reinforcement Learning suffers from abysmal sample efficiency. NSGA-II natively handles the non-differentiable, combinatorial nature of this space while naturally preserving population diversity.
 *   **Metric Selection:** Optimizing directly for *Throughput (Tokens/sec)* in a simulated environment introduces massive variance dependent on kernel implementations. EMPAS instead optimizes for absolute **VRAM constraints** and a deterministic **Weighted Latency Proxy**, ensuring stable and hardware-agnostic multi-objective convergence.
-*   **Production Readiness:** Configuration is completely uncoupled from execution via **Hydra**. The genetic operators, objective bounds, and search space dimensions can be mutated dynamically without touching core python logic. Experiment tracking is seamlessly integrated with **Weights & Biases (WandB)** for artifact and configuration management.
+*   **Current engineering status:** Hydra and optional W&B integration exist, but configuration authority, manifests, deterministic execution, and checkpoint provenance are being stabilized. Hardware validation and genuine low-bit execution are not yet complete.
 
 ---
 
 ## 5. Experimental Results & Insights
 
-Benchmarking the evolved "Balanced" architecture against standard baselines on TinyLlama-1.1B.
+The following historical proxy outputs are retained for auditability only. They are not measured VRAM, latency, perplexity, or deployment results.
 
-| Model Strategy | Loss Proxy (Lower=Better) | VRAM (MB) | Avg Bit-Width |
+| Model Strategy | Predicted Loss (Lower=Better) | Predicted Memory (MB) | Avg Bit-Width |
 | :--- | :--- | :--- | :--- |
 | **Baseline (FP16)** | 2.3765 | ~2471 | 16.0 |
 | **Naive (Uniform 4-bit)** | 2.4685 | ~2471 | 4.0 |

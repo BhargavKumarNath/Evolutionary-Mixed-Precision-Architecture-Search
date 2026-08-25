@@ -1,12 +1,17 @@
+import logging
+import os
+import sys
+
 import hydra
 from omegaconf import DictConfig, OmegaConf
-import sys
-import os
-import logging
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.core.search_space import MixedPrecisionSearchSpace
+from src.core.configuration import validate_config
 from src.core.proxy_evaluator import ProxyEvaluator
+from src.core.search_space import MixedPrecisionSearchSpace
 from src.engine.ga import GAEngine
+from src.utils.manifest import build_manifest, write_manifest
+from src.utils.reproducibility import seed_everything
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger(__name__)
@@ -14,18 +19,22 @@ logger = logging.getLogger(__name__)
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig):
     logger.info("=== EMPAS: Hardware-Aware Evolutionary Search ===")
+    resolved_cfg = validate_config(cfg)
+    seed_everything(resolved_cfg["seed"], resolved_cfg.get("deterministic", False))
 
     # 1. Setup Search Space
     logger.info(f"Initializing Search Space with {cfg.search_space.num_layers} layers.")
     space = MixedPrecisionSearchSpace(
         num_layers=cfg.search_space.num_layers,
-        choices=cfg.search_space.choices
+        choices=cfg.search_space.choices,
+        min_avg_bitwidth=cfg.search_space.get("min_avg_bitwidth"),
+        max_avg_bitwidth=cfg.search_space.get("max_avg_bitwidth"),
     )
 
     # 2. Setup Evaluator
     if cfg.evaluator.type == "proxy":
-        logger.info(f"Loading Proxy Profile from: {cfg.evaluator.profile_path}")
-        evaluator = ProxyEvaluator(profile_path=cfg.evaluator.profile_path)
+        logger.info(f"Loading Proxy Profile from: {resolved_cfg['evaluator']['profile_path']}")
+        evaluator = ProxyEvaluator(profile_path=resolved_cfg["evaluator"]["profile_path"])
     else:
         raise ValueError("Please set evaluator.type='proxy' in config")
         
@@ -33,24 +42,28 @@ def main(cfg: DictConfig):
     algo_config = OmegaConf.to_container(cfg.algorithm, resolve=True)
     tracking_config = OmegaConf.to_container(cfg.tracking, resolve=True)
     
-    # Increase load for better visualisation
-    algo_config['n_generations'] = 50 
-    algo_config['pop_size'] = 100
+    algo_config["profile_path"] = resolved_cfg["evaluator"]["profile_path"]
 
     engine = GAEngine(
         search_space=space,
         evaluator=evaluator,
         config=algo_config,
         tracking_config=tracking_config, # Pass tracking config
-        output_dir="./data/logs/search_tinyllama_wandb"
+        output_dir=resolved_cfg["paths"]["search_output_dir"]
     )
-    
-    engine.run()
+
+    manifest = build_manifest(resolved_cfg, {"profile_path": resolved_cfg["evaluator"]["profile_path"]})
+    write_manifest(resolved_cfg["paths"]["manifest_path"], manifest)
+    engine.run(resume_from=resolved_cfg["paths"].get("resume_from"))
     
     # 5. Show Best Results
     logger.info("--- Pareto Frontier ---")
-    best_loss = sorted(engine.population, key=lambda g: engine.evaluate_population([g])[0].validation_loss)[0]
-    best_vram = sorted(engine.population, key=lambda g: engine.evaluate_population([g])[0].vram_peak_mb)[0]
+    best_loss = min(
+        engine.population, key=lambda g: engine.evaluate_population([g])[0].validation_loss
+    )
+    best_vram = min(
+        engine.population, key=lambda g: engine.evaluate_population([g])[0].vram_peak_mb
+    )
     
     fit_loss = engine.evaluate_population([best_loss])[0]
     fit_vram = engine.evaluate_population([best_vram])[0]

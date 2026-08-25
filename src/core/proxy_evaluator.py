@@ -1,7 +1,7 @@
 import json
-import os
 import logging
-from typing import Dict, Any
+import os
+
 from .evaluator import Evaluator, FitnessMetrics
 from .search_space import Genome
 
@@ -22,7 +22,9 @@ class ProxyEvaluator(Evaluator):
         self.context_overhead_mb = 1024.0
 
     def evaluate(self, genome: Genome) -> FitnessMetrics:
-        """Predict metrics based on the genome configuration"""    
+        """Predict metrics based on the genome configuration."""
+        if not genome.genes:
+            raise ValueError("Genome must contain at least one gene")
         predicted_loss = self.baseline_loss
         total_weight_size_bytes = 0.0
         weighted_bits = 0.0
@@ -51,7 +53,7 @@ class ProxyEvaluator(Evaluator):
         latency_proxy = (weighted_bits / max_bits) * 100.0
 
         return FitnessMetrics(
-            validation_loss=predicted_loss,
-            vram_peak_mb=total_vram,
+            mean_loss=predicted_loss,
+            peak_memory_mb=total_vram,
             latency_ms=latency_proxy
         )

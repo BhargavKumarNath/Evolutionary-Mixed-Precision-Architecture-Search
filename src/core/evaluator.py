@@ -1,23 +1,34 @@
 import abc
-import time
 import random
 from dataclasses import dataclass
-from typing import Dict, Tuple
+
 from .search_space import Genome
+
 
 @dataclass(order=True)
 class FitnessMetrics:
-    """The objectuves we are optimising."""
-    validation_loss: float      # Proxy for Perplecity (lower is better)
-    vram_peak_mb: float     # Memory footprints (lower is better)
-    latency_ms: float       # Inference speed (lower is better)
+    """Named minimization metrics used by the search evaluator."""
+    mean_loss: float
+    peak_memory_mb: float
+    latency_ms: float
+    source: str = "predicted"
 
-    def to_tuple(self) -> Tuple[float, float, float]:
-        return (self.validation_loss, self.vram_peak_mb, self.latency_ms)
+    @property
+    def validation_loss(self) -> float:
+        """Compatibility alias for the legacy search field."""
+        return self.mean_loss
+
+    @property
+    def vram_peak_mb(self) -> float:
+        """Compatibility alias for the legacy search field."""
+        return self.peak_memory_mb
+
+    def to_tuple(self) -> tuple[float, float, float]:
+        return (self.mean_loss, self.peak_memory_mb, self.latency_ms)
     
     def __repr__(self):
-        return (f"Fitness(Loss={self.validation_loss:.4f}, "
-                f"VRAM={self.vram_peak_mb:.1f}MB, "
+        return (f"Fitness(Loss={self.mean_loss:.4f}, "
+            f"Memory={self.peak_memory_mb:.1f}MB, "
                 f"Lat={self.latency_ms:.2f}ms)")
 
 class Evaluator(abc.ABC):
@@ -26,7 +37,6 @@ class Evaluator(abc.ABC):
     @abc.abstractmethod
     def evaluate(self, genome: Genome) -> FitnessMetrics:
         """Run the evaluation pipeline (inference/profiling) on the genome"""
-        pass
 
 class DummyEvaluator(Evaluator):
     """Used for testing the Search Engine without loading real models.
@@ -52,7 +62,7 @@ class DummyEvaluator(Evaluator):
         simulated_latency = 50 + (avg_bits * 2)
 
         return FitnessMetrics(
-            validation_loss=simulated_loss + random.uniform(-0.05, 0.05),
-            vram_peak_mb=simulated_vram + random.uniform(-100, 100),
+            mean_loss=simulated_loss + random.uniform(-0.05, 0.05),
+            peak_memory_mb=simulated_vram + random.uniform(-100, 100),
             latency_ms=simulated_latency + random.uniform(-2, 2)
         )

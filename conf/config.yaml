@@ -6,6 +6,10 @@ defaults:
 
 project_name: "EMPAS"
 seed: 42
+deterministic: false
+
+model_name: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+model_revision: null
 
 # Global Settings
 model_type: "llama"
@@ -14,4 +18,20 @@ target_device: "cuda"
 evaluator:
   type: "proxy"
   profile_path: "./data/profiles/tinyllama_sensitivity.json"
+
+data:
+  dataset: "wikitext"
+  split: "test"
+  seq_len: 128
+  nsamples: 4
+  allow_synthetic_data: false
+
+paths:
+  search_output_dir: "./data/logs/search_tinyllama_wandb"
+  manifest_path: "./data/manifests/search_manifest.json"
+  profile_path: "./data/profiles/tinyllama_sensitivity.json"
+  resume_from: null
+
+validation:
+  genome: [4, 16, 8, 8, 4, 4, 4, 8, 8, 8, 8, 4, 4, 8, 8, 8, 16, 16, 4, 8, 16, 16]
 
