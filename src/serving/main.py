@@ -1,19 +1,20 @@
-import os
 import json
 import logging
+import os
+import sys
+
 import torch
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
-import sys
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # Import our core modules
-from src.core.validator import Validator
 from src.core.search_space import Genome
+from src.core.validator import Validator
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
@@ -69,7 +70,7 @@ async def startup_event():
         logger.info("System Ready. Model loaded on GPU.")
     except Exception as e:
         logger.error(f"Failed to load model: {e}")
-        raise e
+        raise
 
 @app.get("/health")
 def health_check():

@@ -1,132 +1,495 @@
 # EMPAS: Evolutionary Mixed-Precision Architecture Search
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python) ![PyTorch](https://img.shields.io/badge/PyTorch-2.9.1-red?logo=pytorch) ![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow?logo=huggingface) ![CUDA](https://img.shields.io/badge/NVIDIA-CUDA-green?logo=nvidia) [![Live Demo](https://img.shields.io/badge/Live-Dashboard-brightgreen?style=for-the-badge)](https://evolutionary-mixed-precision-search.streamlit.app/)
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python) ![PyTorch](https://img.shields.io/badge/PyTorch-2.9.1-red?logo=pytorch) ![Transformers](https://img.shields.io/badge/HuggingFace-4.57.3-yellow?logo=huggingface) ![CUDA](https://img.shields.io/badge/NVIDIA-CUDA%2012.8-green?logo=nvidia) ![Tests](https://img.shields.io/badge/Tests-39/39-brightgreen) ![Status](https://img.shields.io/badge/Status-Stabilized%20at%20Phase%206-brightgreen)
 
 ## Executive Summary
-**EMPAS** is a research prototype for discovering layer-wise mixed-precision configurations for Large Language Models (LLMs).
 
-> Current status: the existing search uses a numerical fake-quantization proxy. It does not yet produce a packed low-bit deployment model or demonstrate measured GPU memory reduction, latency improvement, or throughput improvement. Historical artifacts are not validated hardware results.
+**EMPAS** is a research platform for discovering layer-wise mixed-precision quantization configurations for Large Language Models using evolutionary algorithms (NSGA-II).
 
-Phase 4 adds an optional bitsandbytes backend for the detected NVIDIA GPU. It supports real 4-bit and 8-bit linear kernels plus FP16 passthrough; 2-bit deployment is not supported by this backend. Hardware benchmark results remain unmeasured until the benchmark protocol is completed.
+**Project status:** the original modernization plan for this codebase specified 14 phases. Phases 1-6 were executed, tested, and verified on real GPU hardware; the project was then deliberately concluded and stabilized at that point. Phases 7-14 (measured Pareto optimization, strong baselines, hardware-aware analysis reports, provenance schemas, CI, serving/dashboard hardening, and advanced optimization) were scoped but are **not implemented**; see [Out of Scope: Phases 7-14](#out-of-scope-phases-7-14) below.
 
-By formulating mixed-precision quantization as a multi-objective optimization problem solved via evolutionary algorithms (NSGA-II), EMPAS eliminates the need for manual, sub-optimal uniform quantization (e.g., blanket INT4).
+### What's Implemented
 
-**Business Impact on TinyLlama-1.1B:**
-*   **Search objective:** explore quality and theoretical memory tradeoffs of layer-wise precision maps.
-*   **Deployment result:** real bitsandbytes execution is available for supported maps; memory and performance results remain unmeasured.
+**Phases 1-6:** Complete reproducible workflow from configuration authority through real GPU execution, proxy calibration, and measurement caching.
 
----
+| Phase | Capability | Status |
+|:------|:-----------|:-------|
+| **1** | Configuration authority, deterministic seeding, checkpoint/resume | Complete (8 tests) |
+| **2** | Named dataset protocol (calibration/validation/test) with fingerprints | Complete (3 tests) |
+| **3** | NSGA-II multi-objective evolutionary search | Complete |
+| **4** | Real bitsandbytes backend (4-bit & 8-bit GPU execution) | Complete (5 tests) |
+| **5** | Hardware benchmark harness (CUDA timing, memory measurement) | Complete (7 tests) |
+| **6** | Proxy calibration against held-out validation data | Complete (16 tests) |
+| **7-14** | Measured Pareto optimization, strong baselines, hardware-aware analysis, provenance schemas, CI, serving/dashboard hardening, advanced optimization | Not started (out of scope) |
 
-## 1. The Engineering Challenge: Heterogeneous Layer Sensitivity
-Modern LLMs are fundamentally memory-bound. While uniform quantization provides a baseline for compression, it is deeply flawed because it ignores the architectural reality of Transformer networks:
-*   **High-Sensitivity Bottlenecks:** Certain attention heads and output projections act as "load-bearing" structures. Compressing them indiscriminately destroys downstream perplexity.
-*   **Low-Sensitivity Redundancy:** Deep transformer blocks exhibit high sparsity and can be compressed aggressively to 2-bit or 4-bit with near-zero signal loss.
+### Key Achievements
 
-The core challenge is allocating a finite "precision budget" across the network. Hand-tuning a 22-layer model with 4 distinct bit-width choices ($4^{22} \approx 1.7 \times 10^{13}$ configurations) is impossible. 
-
-EMPAS automates this discovery process.
-
----
-
-## 2. System Architecture: The Data Lifecycle
-
-EMPAS eschews monolithic design in favor of decoupled, phase-based batch processing and real-time inference. The system architecture is organized around the lifecycle of a model's quantization state.
-
-![alt text](system_design.svg)
-
-### 2.1 Ingestion Layer (Calibration Data)
-The ingestion layer (`src/utils/data.py`) now defines named calibration, validation, and held-out test protocol splits. Each split is sampled deterministically and records sample IDs, token counts, and a fingerprint. The current Wikitext-2 implementation remains intentionally small and must not be treated as evidence of generalization until the final test protocol is run.
-
-### 2.2 Transformation Engine (Offline Search)
-EMPAS operates the Heavy-Compute Search phase asynchronously from serving. 
-*   **Sensitivity profiler:** Iterates through every linear layer of the Base Model, applying numerical fake quantization for an additive search proxy.
-*   **Genetic Optimizer (NSGA-II):** Consumes the profiler's cached states to evolve "Genomes" mapping layers to bit-widths. The engine evaluates candidate fitness (Loss vs. VRAM limits) without executing memory-bound forward passes.
-*   **Artifact Export:** Resolves the Pareto Frontier into static JSON artifacts ("Balanced", "Max Compression"). These artifacts serve as an ultra-lightweight File-Based Model Registry.
-
-### 2.3 Inference Service
-Model serving is handled by a horizontal, stateless API (`src/serving/main.py`) powered by FastAPI.
-The current service path instantiates the FP16 base model and applies simulated weight perturbations. It is a demonstration path, not a genuinely quantized deployment service.
-
-### 2.4 Monitoring & Feedback Loop (Roadmap)
-The current inference service performs localized latency measurement logging. Future work will formalize this boundary, exporting latency MS and output perplexity distributions to an aggregation layer (e.g., Prometheus) to detect hardware drift and trigger automated reconfiguration triggers.
+- **39 unit tests**, all passing across all phases
+- **Real GPU execution** via bitsandbytes (4-bit, 8-bit, FP16 passthrough)
+- **Hardware measurement** with CUDA synchronization, percentile statistics, memory tracking
+- **Reproducible experiments** with configuration authority, RNG checkpointing, dataset fingerprints
+- **Proxy calibration** against validation split with correlation metrics
+- **Measurement caching** by genome/backend/hardware with automatic versioning
 
 ---
 
-## 3. Engineering Constraints & Trade-offs
+## Problem Statement
 
-A core principle of Staff-level design is acknowledging what the system deliberately chooses *not* to do.
+Modern LLMs are fundamentally memory-bound. Uniform quantization ignores architectural reality:
 
-1. **Offline Batch Search vs. Online Reinforcement Learning:**
-   * **Decision:** We explicitly decouple the computationally intensive NSGA-II search from the runtime environment.
-   * **Rationale:** Running NAS concurrently via RL requires differentiable relaxations (DARTS) that lack stability. By treating the search as a massive offline batch job, we accept static runtime configurations in exchange for 0% compute overhead during inference and theoretically optimal discrete search spaces.
-2. **File-Based Registry vs. Database Services:**
-   * **Decision:** Quantization architectures are serialized to `./deployment/artifacts/*.json` rather than pushing to MLflow or a relational database.
-   * **Rationale:** Acknowledged "Hardcoded Fragility" is accepted to ensure the project runs seamlessly in edge, air-gapped, or zero-install GPU environments. This minimizes MLOps infrastructure hurdles for initial proofs-of-concept.
-3. **Zero-Cost Additive Proxy vs. Full Perplexity Evaluations:**
-   * **Decision:** The search algorithm evaluates fitness using an additive penalty derived from the calibration split, not full Wikitext perplexity.
-   * **Rationale:** We traded a marginal degree of true-loss accuracy for an $O(1)$ fitness function. This explicit proxy scaling boundary reduces the architectural search phase from $O(\text{Days})$ to $O(\text{Minutes})$.
+- **High-Sensitivity Layers:** Attention heads and output projections are load-bearing. Indiscriminate compression destroys downstream quality.
+- **Low-Sensitivity Redundancy:** Deep transformer blocks tolerate aggressive compression (2-4 bit) with minimal signal loss.
 
-## 4. Engineering Rigor & Methodologies
-
-EMPAS was built emphasizing reproducibility, scalability, and robust scientific methodology:
-
-*   **Evaluation Protocol:** Search uses only the calibration split. Candidate validation uses a separate validation split, while the held-out test split is reserved for final reporting. Split identities and token fingerprints are persisted in the experiment manifest.
-*   **Why NSGA-II over DARTS / RL?** The quantization search space is discrete (hardware natively supports 2/4/8/16-bit blocks). Gradient-based NAS (DARTS) requires continuous relaxations that break down under rounding, and Reinforcement Learning suffers from abysmal sample efficiency. NSGA-II natively handles the non-differentiable, combinatorial nature of this space while naturally preserving population diversity.
-*   **Metric Selection:** Optimizing directly for *Throughput (Tokens/sec)* in a simulated environment introduces massive variance dependent on kernel implementations. EMPAS instead optimizes for absolute **VRAM constraints** and a deterministic **Weighted Latency Proxy**, ensuring stable and hardware-agnostic multi-objective convergence.
-*   **Current engineering status:** Hydra and optional W&B integration exist, but configuration authority, manifests, deterministic execution, and checkpoint provenance are being stabilized. Hardware validation and genuine low-bit execution are not yet complete.
+**The Challenge:** Hand-tuning 22-layer models with 4 bitwidth choices yields $4^{22} \approx 1.7 \times 10^{13}$ configurations. EMPAS automates discovery via evolutionary optimization.
 
 ---
 
-## 5. Experimental Results & Insights
+## System Architecture
 
-The following historical proxy outputs are retained for auditability only. They are not measured VRAM, latency, perplexity, or deployment results.
-
-| Model Strategy | Predicted Loss (Lower=Better) | Predicted Memory (MB) | Avg Bit-Width |
-| :--- | :--- | :--- | :--- |
-| **Baseline (FP16)** | 2.3765 | ~2471 | 16.0 |
-| **Naive (Uniform 4-bit)** | 2.4685 | ~2471 | 4.0 |
-| **EMPAS (Balanced)** | **2.4521** | ~2471 | **4.4** |
-
-**Architectural Intuition Discovered:**
-The evolutionary engine consistently arrived at conclusions that matched advanced human intuition, saving weeks of manual tuning:
-1.  **Early Feature Extraction (Layers 0-2):** Averaged **4.0-bit**. The embeddings immediately projected into lower precision without major loss.
-2.  **Deep Reasoning Blocks (Layers 7, 12):** The NSGA-II algorithm identified specific "load-bearing" attention layers and boosted them to **8-bit** (and sometimes **16-bit**) to preserve reasoning gradients.
-3.  **Outputs:** Maintained at lower precision aggressively.
+```
+Configuration Authority (Hydra)
+        ↓
+Deterministic Seeding + Dataset Protocol
+        ↓
+NSGA-II Evolutionary Search (fake quantization proxy)
+        ↓
+Pareto Frontier Candidates
+        ↓
+Real GPU Execution (bitsandbytes backend)
+        ↓
+Hardware Measurements (CUDA timing, memory)
+        ↓
+Proxy Calibration (correlation vs measured)
+        ↓
+Measurement Cache (versioned by genome/hardware/backend)
+        ↓
+Measured Pareto Frontier + Analysis Reports
+```
 
 ---
 
-## 6. Installation & Usage
+## Project Structure
 
-**Prerequisites:** Python 3.9+, PyTorch (CUDA required).
+```
+.
+├── conf/                       # Hydra configuration authority
+│   ├── config.yaml             # Root config (model, backend, seeds, paths)
+│   ├── algorithm/              # Evolution algorithm configs
+│   │   ├── ga.yaml             # Genetic algorithm parameters
+│   │   └── nsga2.yaml          # NSGA-II settings
+│   ├── search_space/           # Genome constraints
+│   │   └── llama_mixed_precision.yaml  # [4, 8, 16] bit choices
+│   └── tracking/               # Experiment tracking
+│       └── wandb.yaml          # W&B integration
+├── src/
+│   ├── core/                   # Search and validation
+│   │   ├── evaluator.py        # Fitness metrics (loss, memory, latency)
+│   │   ├── proxy_evaluator.py  # Fake quantization proxy
+│   │   ├── search_space.py     # Genome constraints
+│   │   └── validator.py        # Model evaluation (simulation or bitsandbytes)
+│   ├── engine/                 # Evolutionary algorithm (NSGA-II)
+│   │   ├── ga.py               # NSGA-II implementation with checkpoint/resume
+│   │   ├── operators.py        # Crossover, mutation operators
+│   │   └── pareto.py           # Nondominated sorting, crowding distance
+│   ├── models/                 # Quantization
+│   │   ├── quantizer.py        # Fake quantization kernels
+│   │   ├── quantization_backend.py  # Real bitsandbytes backend
+│   │   ├── sensitivity.py      # Layer sensitivity profiling
+│   │   └── wrapper.py          # Model abstraction
+│   ├── benchmark/              # Hardware measurement (Phases 5-6)
+│   │   ├── harness.py          # CUDA timing, memory measurement primitives
+│   │   ├── cache.py            # Measurement persistence and cache keys
+│   │   ├── proxy_calibration.py# Proxy vs measured correlation
+│   │   └── proxy_validator.py  # Empirical proxy model
+│   ├── hardware/               # GPU profiling
+│   │   └── profiler.py         # CUDA device introspection
+│   ├── serving/                # Inference API
+│   │   └── main.py             # FastAPI HTTP endpoints
+│   ├── utils/                  # Utilities
+│   │   ├── data.py             # Dataset protocol with fingerprints
+│   │   ├── logger.py           # Structured logging
+│   │   ├── manifest.py         # Experiment provenance
+│   │   └── reproducibility.py  # Deterministic seeding
+│   └── demo/                   # Interactive dashboard
+│       └── app.py              # Streamlit UI
+├── scripts/
+│   ├── run_search.py           # NSGA-II search entry point (Hydra)
+│   ├── benchmark.py            # Hardware benchmark CLI (Phase 5-6)
+│   ├── validate_candidate.py   # Genome evaluation utility
+│   ├── profile_sensitivity.py  # Layer sensitivity analysis
+│   └── verify_*.py             # Development verification scripts
+├── tests/
+│   ├── test_phase1.py          # Config, seeding, checkpointing (8 tests)
+│   ├── test_phase2.py          # Dataset protocol (3 tests)
+│   ├── test_phase4.py          # bitsandbytes backend (5 tests)
+│   └── test_phase5_6.py        # Benchmark harness, proxy calibration (23 tests)
+├── data/
+│   ├── logs/                   # Search checkpoints and artifacts
+│   └── profiles/               # Sensitivity profiles
+├── deployment/
+│   └── artifacts/              # Exported quantization configs
+│       ├── balanced.json
+│       ├── max_accuracy.json
+│       └── max_compression.json
+└── outputs/                    # Timestamped experiment results
+```
+
+---
+
+## Phase Details
+
+### Phase 1: Configuration Authority & Reproducibility
+
+**Objective:** Establish single source of truth for hyperparameters with deterministic execution.
+
+**Key Components:**
+- `src/utils/reproducibility.py`: Seed management across Python, NumPy, PyTorch, CUDA
+- `src/utils/manifest.py`: Experiment provenance with config hash, git state, hardware ID
+- `src/core/configuration.py`: Config validation and integrity checks
+
+**Tests:** 8 passing (config validation, seed reproducibility, checkpoint/resume equivalence)
+
+---
+
+### Phase 2: Dataset Protocol with Fingerprints
+
+**Objective:** Implement named, reproducible splits with SHA-256 fingerprints and overlap detection.
+
+**Key Components:**
+- `src/utils/data.py`: DatasetProtocol, DatasetSplit with immutable fingerprints
+- Three-tier protocol: calibration (4 samples × 128 tokens), validation (4 × 128), test (4 × 128)
+- Explicit overlap rejection across splits
+
+**Tests:** 3 passing (fingerprint reproducibility, overlap rejection, seed sensitivity)
+
+---
+
+### Phase 3: NSGA-II Evolutionary Search
+
+**Objective:** Genuine multi-objective optimization with nondominated sorting and crowding distance.
+
+**Key Components:**
+- `src/engine/ga.py`: NSGA-II with step(), run(), checkpoint/resume
+- `src/engine/pareto.py`: O(N²) nondominated sorting
+- `src/engine/operators.py`: Uniform crossover, random mutation
+- Fitness caching to avoid redundant evaluation
+
+**Algorithm:**
+1. Initialize random population
+2. For each generation:
+   - Evaluate fitness (loss, memory)
+   - Nondominated sort into fronts
+   - Assign crowding distance
+   - Tournament selection
+   - Crossover (50% gene swap)
+   - Mutation (per-gene)
+3. Checkpoint and resume from saved state
+
+---
+
+### Phase 4: Real bitsandbytes Backend
+
+**Objective:** Replace fake quantization with genuine GPU execution.
+
+**Key Components:**
+- `src/models/quantization_backend.py`: BitsAndBytesBackend wrapper
+- Automatic Linear → Linear4bit/Linear8bitLt replacement
+- BackendCapabilities with metadata (precision support, group size, compute dtype)
+- Immutable artifact persistence with base model versioning
+
+**Tests:** 5 passing on RTX 4070 (4-bit execution, 8-bit execution, 2-bit rejection, artifact round-trip)
+
+**Hardware Validation:**
+- GPU: NVIDIA RTX 4070 (compute capability 8.9, 8GB VRAM)
+- CUDA: 12.8, PyTorch 2.9.1, bitsandbytes 0.50.1
+- Verified: Finite CUDA outputs, correct module replacement, artifact load/save
+
+---
+
+### Phase 5: Hardware Benchmark Harness
+
+**Objective:** Measure actual GPU behavior with controlled, repeatable protocols.
+
+**Key Components:**
+- `src/benchmark/harness.py`: CUDA event timing, memory measurement primitives
+- `BenchmarkResult`: Serializable dataclass with latency/memory/quality stats
+- Measurement protocol:
+  1. Clear cache, record baseline memory
+  2. Load model, record peak allocated/reserved
+  3. Warmups with synchronization
+  4. Collect latency samples with CUDA events
+  5. Compute percentiles (p50, p95, p99)
+
+**Tests:** 7 passing (latency computation, memory tracking, percentile stats)
+
+---
+
+### Phase 6: Proxy Calibration & Measurement Cache
+
+**Objective:** Calibrate proxy metrics against measured hardware behavior.
+
+**Key Components:**
+- `src/benchmark/cache.py`: MeasurementCache with versioned cache keys
+- `src/benchmark/proxy_calibration.py`: ProxyCalibration, Pearson correlation reporting
+- `src/benchmark/proxy_validator.py`: ProxyValidator, initial design-of-experiments
+- Cache keys by: (genome, backend, hardware_id, batch_size, seq_len, protocol_version)
+
+**Calibration Workflow:**
+1. Measure initial diverse design (FP16, INT8, INT4, alternating patterns)
+2. Collect proxy predictions (additive quality loss from bitwidth)
+3. Compute measured metrics on validation split
+4. Record Pearson correlations per objective
+5. Cache all measurements for reuse
+
+**Tests:** 16 passing (proxy calibration, cache uniqueness, workflow integration, schema separation)
+
+---
+
+## Running the System
+
+### Setup
+
+Requires Python >= 3.10 (developed and verified on 3.12) and, for GPU-backed scripts, an NVIDIA GPU with CUDA available to PyTorch.
 
 ```bash
-git clone https://github.com/BhargavKumarNath/EMPAS.git
-cd EMPAS
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Phase 1: Generate Sensitivity Map
-Profiles the target model to generate the $O(1)$ zero-cost proxy data.
-```bash
-python scripts/profile_sensitivity.py
-```
+### Configuration
 
-### Phase 2: Run Evolutionary Search
-Executes the NSGA-II algorithm (logs dynamically to WandB).
+`conf/config.yaml` is the Hydra root config (composed with `conf/algorithm/*.yaml`, `conf/search_space/*.yaml`, and `conf/tracking/*.yaml`). Key fields:
+```yaml
+model_name: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+
+quantization:
+  backend: "bitsandbytes"  # or "simulation" for numerical fake-quantization only
+
+defaults:
+  - algorithm: nsga2        # conf/algorithm/nsga2.yaml: pop_size, n_generations, ...
+  - search_space: llama_mixed_precision
+  - tracking: wandb         # tracking.enabled: true by default (syncs to W&B)
+```
+Override any value from the CLI, e.g. `algorithm.pop_size=8 algorithm.n_generations=5`, or `tracking.enabled=false` to run fully offline without a W&B account.
+
+### Run Search
+
 ```bash
 python scripts/run_search.py
 ```
+Outputs:
+- `outputs/{timestamp}/`: Hydra run directory (logs, resolved config)
+- `<paths.search_output_dir>/checkpoint_gen_*.json`: per-generation checkpoints (resumable via `paths.resume_from`)
+- `<paths.manifest_path>`: experiment provenance manifest
 
-### Phase 3: Export & Serve
-Extract Pareto-optimal JSON artifacts and launch the interactive Streamlit dashboard.
+### Export Pareto Artifacts
+
 ```bash
 python scripts/export_artifacts.py
+```
+Reads the latest search checkpoint and writes `deployment/artifacts/{balanced,max_accuracy,max_compression}.json`.
+
+### Benchmark Hardware
+
+```bash
+python scripts/benchmark.py
+```
+Requires CUDA. Reports hardware identity and initializes the measurement cache (`benchmark_cache/` by default).
+
+### Validate a Candidate
+
+```bash
+python scripts/validate_candidate.py "validation.genome=[4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4]"
+```
+The genome length must equal `search_space.num_layers` (22 for TinyLlama-1.1B).
+
+### Serve an Artifact
+
+```bash
+python -m uvicorn src.serving.main:app --host 0.0.0.0 --port 8000
+```
+Loads `deployment/artifacts/balanced.json` on startup and exposes `GET /health` and `POST /generate`. This path still applies numerical fake-quantization to the base model (see [Design Principles](#design-principles)); it is not a demonstration of packed low-bit deployment.
+
+### Launch Dashboard
+
+```bash
 streamlit run src/demo/app.py
 ```
 
 ---
 
-## 7. Future Roadmap
-1.  **Custom CUDA Kernels:** EMPAS sensitivity profiling still uses explicitly labeled numerical fake quantization, while supported deployment maps use bitsandbytes. Custom kernels should be considered only after hardware measurements identify a concrete bottleneck.
-2.  **Hardware-in-the-Loop Latency:** Replacing the latency proxy with an actual Look-Up Table (LUT) of measured tensor-core execution times on target edge architectures (e.g., Jetson AGX Orin).
-3.  **Scale Up:** Validate configuration stability on `Llama-3-8B` down-quantized to fit within standard consumer 8GB VRAM cards.
+## Example Run (Single Runs, TinyLlama-1.1B, RTX 4070 Laptop GPU)
+
+These are actual outputs from the commands above on this hardware, not a systematic study: each is one run, and neither uses a synchronized/warmed-up latency protocol (that harness exists as of Phase 5 but isn't wired into these two legacy comparison paths). Treat the loss/perplexity numbers as reproducible and the latency/throughput numbers as indicative only.
+
+**`validate_candidate.py`** (bitsandbytes backend, held-out validation split, genome `[4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4]`):
+
+| Config | Mean Loss | Perplexity | Latency |
+|:-------|:---------:|:----------:|:-------:|
+| FP16 baseline (all 16-bit) | 2.5714 | 13.0838 | ~150-315ms |
+| Evolved genome (4/8/16 mix) | 2.6097 | 13.5953 | ~60-155ms |
+
+Model compression (theoretical weight-storage ratio, `1 - avg_bits/16`): **43.2%**.
+
+**`benchmark_vs_baseline.py`** (numerical fake-quantization simulation path, not bitsandbytes; see [Design Principles](#design-principles)):
+
+| Model | Loss (proxy) | VRAM (MB) | Throughput (tok/s) | Avg Bit-Width |
+|:------|:------------:|:---------:|:-------------------:|:-------------:|
+| Baseline (FP16) | 2.4161 | 2447 | ~3970 | 16 |
+| Naive uniform 4-bit | 2.5016 | 2447 | ~7970 | 4 |
+| EMPAS (balanced genome) | 2.4895 | 2447 | ~7290 | 4.4 |
+
+VRAM is identical across rows here because this script's quantizer dequantizes back to full-precision tensors after simulating the numerical error (Design Principle 1); it demonstrates the quality tradeoff of the discovered precision map, not a memory reduction. Real memory savings require the bitsandbytes backend path (`validate_candidate.py`, `benchmark.py`), which Phase 5-6 measured but Phase 7 (measured Pareto frontier across baselines) never assembled into a comparison table like this one.
+
+---
+
+## Test Suite
+
+**Total: 39 tests, all passing**
+
+```bash
+pytest tests/ -v
+
+# Phase 1: Config & Reproducibility (8 tests)
+pytest tests/test_phase1.py -v
+
+# Phase 2: Dataset Protocol (3 tests)
+pytest tests/test_phase2.py -v
+
+# Phase 4: bitsandbytes Backend (5 tests, GPU required)
+pytest tests/test_phase4.py -v
+
+# Phase 5-6: Benchmark & Proxy (23 tests)
+pytest tests/test_phase5_6.py -v
+```
+
+### Linting and Type Checking
+
+```bash
+ruff check .
+mypy src/ scripts/
+```
+
+---
+
+## Design Principles
+
+### 1. Backend Abstraction
+
+Quantization logic decoupled via `QuantizationBackend` protocol enables swapping fake for real execution:
+
+```python
+class QuantizationBackend(Protocol):
+    def quantize(self, model: nn.Module, genome: list[int]) -> nn.Module: ...
+    def save(self, model: nn.Module, path: Path) -> None: ...
+    def load(self, path: Path) -> nn.Module: ...
+    def capabilities(self) -> BackendCapabilities: ...
+```
+
+### 2. Immutable Artifact Persistence
+
+Models saved with immutable references:
+- Base model name and revision
+- Precision map (layer → bitwidth)
+- Backend metadata
+
+On load, artifact rebuilds quantization state from immutable base, avoiding bitsandbytes runtime buffer serialization issues.
+
+### 3. Dataset Fingerprinting
+
+Each split fingerprinted by SHA-256(samples, ids, token_count):
+- Ensures reproducibility
+- Prevents silent data drift
+- Enables provenance tracking
+
+### 4. Predicted vs. Measured Separation
+
+Schema explicitly separates cheap proxy from ground truth:
+
+```python
+@dataclass
+class CalibrationPoint:
+    proxy: ProxyMetrics  # predicted_quality_loss, model_version
+    measured: MeasuredMetrics  # mean_loss, perplexity, memory, latency
+```
+
+Prevents accidental mixing of heuristics with measured data.
+
+### 5. Measurement Cache by Hardware
+
+Cache keys incorporate hardware fingerprint → measurements never reused across different GPUs or CUDA versions.
+
+---
+
+## Dependencies
+
+**Core:**
+- PyTorch 2.9.1 (CUDA 12.8)
+- Transformers 4.57.3
+- bitsandbytes 0.50.1
+- Hydra 1.3.2
+- Datasets 3.0+
+
+**Development:**
+- pytest 9.1.1
+- ruff (linting)
+- mypy (type checking)
+
+See `requirements.txt` for complete list.
+
+---
+
+## Out of Scope: Phases 7-14
+
+The original modernization plan for this codebase continued through Phase 14: measured Pareto optimization, strong baselines (FP16/INT8/INT4/published mixed-precision comparisons), hardware-aware analysis reports, experiment provenance schemas, CI, serving/dashboard hardening, and advanced optimization (learned surrogates, custom kernels, multi-GPU search). **That work was not started.** The project was deliberately stabilized and concluded at the end of Phase 6: the reproducible search, real GPU backend, benchmark harness, and proxy calibration all work and are tested, but there is no measured Pareto frontier, no baseline comparison table, and no hardware-aware analysis report produced by this repository. Numbers in this README (loss, latency, compression) come from individual example runs of the existing scripts, not from a systematic measured study across baselines.
+
+---
+
+## Key Results Summary
+
+**Status:** All 39 tests passing. Phases 1-6 complete; phases 7-14 out of scope (see above).
+
+| Component | Status | Evidence |
+|:----------|:-------|:---------|
+| Configuration Authority | Done | config.yaml + Hydra validation + manifest provenance |
+| Deterministic Seeding | Done | reproducibility tests (seed → RNG state equivalence) |
+| Dataset Protocol | Done | SHA-256 fingerprints, overlap rejection, 3-way split |
+| NSGA-II Search | Done | Nondominated sorting, crowding distance, tournament selection |
+| Real GPU Backend | Done | bitsandbytes 4-bit/8-bit execution on RTX 4070 |
+| Hardware Measurement | Done | CUDA event timing, memory tracking, percentile stats |
+| Proxy Calibration | Done | Correlation reporting, schema separation, cache versioning |
+
+---
+
+## Reproducibility & Validation
+
+**Deterministic Guarantees:**
+1. Configuration seeded via Hydra
+2. Dataset splits fingerprinted by content
+3. RNG state checkpointed at every generation
+4. GPU execution synchronized via CUDA events
+5. All artifacts include provenance manifest
+
+**Verification:**
+- Run twice with identical config → identical results
+- Resume from checkpoint → numerically equivalent to uninterrupted run
+- Proxy predictions reproducible from training candidates
+- Cache keys change only when backend/hardware/shape changes
+
+---
+
+## Citation
+
+```bibtex
+@software{empas2025,
+  title={EMPAS: Evolutionary Mixed-Precision Architecture Search},
+  year={2025}
+}
+```
+
+---
+
+## License
+
+MIT License. See LICENSE file for details.

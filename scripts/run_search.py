@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from typing import Any, cast
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -39,8 +40,8 @@ def main(cfg: DictConfig):
         raise ValueError("Please set evaluator.type='proxy' in config")
         
     # Setup Configs
-    algo_config = OmegaConf.to_container(cfg.algorithm, resolve=True)
-    tracking_config = OmegaConf.to_container(cfg.tracking, resolve=True)
+    algo_config = cast(dict[str, Any], OmegaConf.to_container(cfg.algorithm, resolve=True))
+    tracking_config = cast(dict[str, Any], OmegaConf.to_container(cfg.tracking, resolve=True))
     
     algo_config["profile_path"] = resolved_cfg["evaluator"]["profile_path"]
 

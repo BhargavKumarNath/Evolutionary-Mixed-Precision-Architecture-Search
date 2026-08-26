@@ -1,18 +1,20 @@
-import sys
 import os
-import torch
+import sys
+
 import hydra
+import torch
 from omegaconf import DictConfig
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.utils.data import get_calibration_dataset
 from src.models.wrapper import ModelWrapper
+from src.utils.data import get_calibration_dataset
 
 # Override config to use TinyLlama for development
 MODEL_ID = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig):
-    print(f"=== EMPAS: Hardware & Data Verification ===")
+    print("=== EMPAS: Hardware & Data Verification ===")
     print(f"Target GPU: {torch.cuda.get_device_name(0)}")
 
     # 1. Load Data

@@ -1,11 +1,13 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.core.search_space import Genome, MixedPrecisionSearchSpace
 from src.core.evaluator import FitnessMetrics
-from src.engine.pareto import dominates, get_pareto_front
+from src.core.search_space import Genome, MixedPrecisionSearchSpace
 from src.engine.operators import crossover_uniform, mutate_random_gene
+from src.engine.pareto import dominates, get_pareto_front
+
 
 def test_pareto():
     print("--- Testing Pareto Logic ---")

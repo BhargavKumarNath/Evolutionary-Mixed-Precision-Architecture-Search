@@ -1,8 +1,9 @@
 import random
-from typing import List, Tuple
+
 from ..core.search_space import Genome, MixedPrecisionSearchSpace
 
-def crossover_uniform(parent1: Genome, parent2: Genome) -> Tuple[Genome, Genome]:
+
+def crossover_uniform(parent1: Genome, parent2: Genome) -> tuple[Genome, Genome]:
     """
     Uniform Crossover: Each gene (layer) is randomly selected from either parent.
     Returns two children.

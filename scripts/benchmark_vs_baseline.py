@@ -1,13 +1,15 @@
-import sys
-import os
-import torch
-import time
 import logging
+import os
+import sys
+import time
+
 import pandas as pd
+import torch
 from tabulate import tabulate
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.core.validator import Validator
 from src.core.search_space import Genome
+from src.core.validator import Validator
 from src.utils.data import get_calibration_dataset
 
 # Setup Logging
@@ -77,7 +79,7 @@ def measure_performance(validator, genome, name):
     }
 
 def main():
-    logger.info(f"=== EMPAS vs. Baselines Benchmark ===")
+    logger.info("=== EMPAS vs. Baselines Benchmark ===")
     
     validator = Validator(MODEL_NAME)
     results = []
@@ -105,9 +107,9 @@ def main():
     print("\n=== Analysis ===")
     if empas_loss < naive_loss:
         print(f"EMPAS beats Naive 4-bit! (Lower Loss: {empas_loss} vs {naive_loss})")
-        print(f"   Reason: EMPAS used 8-bit for sensitive layers, while Naive forced them to 4-bit.")
+        print("   Reason: EMPAS used 8-bit for sensitive layers, while Naive forced them to 4-bit.")
     else:
-        print(f"⚠️ EMPAS is comparable to Naive.")
+        print("EMPAS is comparable to Naive.")
 
 if __name__ == "__main__":
     main()

@@ -1,15 +1,15 @@
-import torch
-import torch.nn as nn
 import logging
-from typing import Dict, List, Tuple
 
-from .wrapper import ModelWrapper
+import torch
+from torch import nn
+
 from .quantizer import fake_quantize_tensor
+from .wrapper import ModelWrapper
 
 logger = logging.getLogger(__name__)
 
 class SensitivityProfiler:
-    def __init__(self, wrapper: ModelWrapper, dataset: List[torch.Tensor]):
+    def __init__(self, wrapper: ModelWrapper, dataset: list[torch.Tensor]):
         self.wrapper = wrapper
         self.dataset = dataset
         self.choices = [2, 4, 8, 16]
@@ -21,7 +21,7 @@ class SensitivityProfiler:
                 total_loss += self.wrapper.forward_pass_check(batch)
         return total_loss / len(self.dataset)
 
-    def profile(self) -> Tuple[Dict[Tuple[int, int], float], Dict[int, int], float]:
+    def profile(self) -> tuple[dict[tuple[int, int], float], dict[int, int], float]:
         """
         Returns:
             1. Sensitivity Map: {(layer_idx, bits): impact}

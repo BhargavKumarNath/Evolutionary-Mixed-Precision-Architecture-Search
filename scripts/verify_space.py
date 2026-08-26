@@ -1,9 +1,13 @@
+import os
+import sys
+
 import hydra
 from omegaconf import DictConfig
-import sys
-import os
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from src.core.search_space import MixedPrecisionSearchSpace
+
+
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig):
     print(f"=== EMPAS: Initialising Search Space: {cfg.search_space.name} ===")
@@ -13,7 +17,7 @@ def main(cfg: DictConfig):
         choices=cfg.search_space.choices
     )
 
-    print(f"Configuration loaded")
+    print("Configuration loaded")
     print(f"Layers: {space.num_layers}")
     print(f"Bit-width choices: {space.choices}")
 

@@ -1,12 +1,13 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import json
 import os
 import sys
+
 import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
 
 # Mock mode for cloud deployment (no GPU)
 MOCK_MODE = not os.path.exists("./data/profiles/tinyllama_sensitivity.json")
@@ -15,9 +16,9 @@ if not MOCK_MODE:
     sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
     try:
         import torch
-        from src.core.validator import Validator
+
         from src.core.search_space import Genome
-        from src.core.proxy_evaluator import ProxyEvaluator
+        from src.core.validator import Validator
         GPU_AVAILABLE = torch.cuda.is_available()
     except ImportError:
         MOCK_MODE = True
@@ -145,7 +146,7 @@ def generate_mock_artifacts():
 def load_search_data():
     """Load or generate search history data"""
     if MOCK_MODE or not os.path.exists(CHECKPOINT_PATH):
-        st.info("📊 Running in demo mode with synthetic data")
+        st.info("Running in demo mode with synthetic data")
         return generate_mock_search_data()
     
     with open(CHECKPOINT_PATH, 'r') as f:
@@ -201,13 +202,13 @@ def calculate_pareto_front(df):
     return pareto_mask
 
 # Header
-st.markdown('<p class="main-header">🧬 EMPAS: Evolutionary Mixed-Precision Architecture Search</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-header">EMPAS: Evolutionary Mixed-Precision Architecture Search</p>', unsafe_allow_html=True)
 st.markdown("**Hardware-Aware Neural Network Optimization via Genetic Algorithms**")
 
 if MOCK_MODE:
     st.markdown("""
     <div class="warning-box">
-        ⚠️ <strong>Demo Mode Active</strong><br>
+        <strong>Demo Mode Active</strong><br>
         Running with synthetic data for demonstration. For full functionality, deploy locally with GPU access.
     </div>
     """, unsafe_allow_html=True)
@@ -217,18 +218,18 @@ artifacts = load_artifacts()
 search_df = load_search_data()
 
 # Sidebar
-st.sidebar.title("🎛️ Configuration")
+st.sidebar.title("Configuration")
 st.sidebar.markdown("---")
 
 st.sidebar.markdown("""
-### 📖 About EMPAS
+### About EMPAS
 
 EMPAS uses **evolutionary algorithms** to discover optimal mixed-precision quantization strategies for Large Language Models.
 
 **Key Objectives:**
-- 🎯 Minimize model size (VRAM)
-- 🚀 Maximize inference speed
-- 📊 Preserve accuracy
+- Minimize model size (VRAM)
+- Maximize inference speed
+- Preserve accuracy
 
 **How it works:**
 1. Each architecture is a "genome" of layer-wise bit-widths
@@ -237,7 +238,7 @@ EMPAS uses **evolutionary algorithms** to discover optimal mixed-precision quant
 """)
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 🔧 Select Architecture")
+st.sidebar.markdown("### Select Architecture")
 
 selected_archetype = st.sidebar.radio(
     "Choose a pre-optimized configuration:",
@@ -247,10 +248,10 @@ selected_archetype = st.sidebar.radio(
 
 # Architecture descriptions
 arch_descriptions = {
-    "balanced": "⚖️ **Balanced**: Best trade-off between accuracy, speed, and memory",
-    "max_accuracy": "🎯 **Max Accuracy**: Prioritizes model quality over compression",
-    "max_compression": "📦 **Max Compression**: Smallest model size, fastest inference",
-    "Baseline (FP16)": "📏 **Baseline**: Standard 16-bit precision (reference)"
+    "balanced": "**Balanced**: Best trade-off between accuracy, speed, and memory",
+    "max_accuracy": "**Max Accuracy**: Prioritizes model quality over compression",
+    "max_compression": "**Max Compression**: Smallest model size, fastest inference",
+    "Baseline (FP16)": "**Baseline**: Standard 16-bit precision (reference)"
 }
 
 st.sidebar.info(arch_descriptions[selected_archetype])
@@ -276,7 +277,7 @@ compression_ratio = 1 - (sum(current_genes) / (16 * 22))
 memory_savings_mb = 2200 - metrics.get('predicted_vram_mb', 0)
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📊 Quick Stats")
+st.sidebar.markdown("### Quick Stats")
 
 col1, col2 = st.sidebar.columns(2)
 col1.metric("Avg Bit-Width", f"{avg_bits:.1f}b")
@@ -288,10 +289,10 @@ col4.metric("Layers", "22")
 
 # Main content tabs
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 Search Analysis", 
-    "🔬 Architecture Inspector", 
-    "📈 Performance Metrics",
-    "💬 Inference Demo"
+    "Search Analysis", 
+    "Architecture Inspector", 
+    "Performance Metrics",
+    "Inference Demo"
 ])
 
 # TAB 1: Search Analysis
@@ -328,7 +329,7 @@ with tab1:
                 "loss": "Validation Loss",
                 "latency": "Latency (ms)"
             },
-            title="🎯 Pareto Frontier: Loss vs VRAM (Population at Generation 50)"
+            title="Pareto Frontier: Loss vs VRAM (Population at Generation 50)"
         )
         
         # Highlight selected architecture
@@ -369,7 +370,7 @@ with tab1:
         st.plotly_chart(fig, width='content')
         
     with col2:
-        st.subheader("🏆 Elite Architectures")
+        st.subheader("Elite Architectures")
         
         pareto_solutions = search_df[search_df['is_pareto']].nsmallest(5, 'loss')
         
@@ -390,7 +391,7 @@ with tab1:
         st.metric("Compression Range", f"{compression_ratio*100:.1f}%")
     
     # Evolution over time
-    st.subheader("📈 Evolution Progress")
+    st.subheader("Evolution Progress")
     
     # Create mock generation data
     generations = list(range(1, 51))
@@ -424,7 +425,7 @@ with tab1:
 
 # TAB 2: Architecture Inspector
 with tab2:
-    st.header("🔬 Quantization Architecture Analysis")
+    st.header("Quantization Architecture Analysis")
     
     st.markdown("""
     <div class="info-box">
@@ -456,7 +457,7 @@ with tab2:
             color="Bit-Width",
             color_continuous_scale=[[0, '#e74c3c'], [0.33, '#f39c12'], [0.66, '#f1c40f'], [1, '#2ecc71']],
             labels={"Layer_ID": "Layer Index", "Bit-Width": "Bit-Width"},
-            title=f"📊 Layer-wise Quantization Map: {selected_archetype.upper()}"
+            title=f"Layer-wise Quantization Map: {selected_archetype.upper()}"
         )
         
         fig3.add_hline(y=avg_bits, line_dash="dash", line_color="red",
@@ -478,7 +479,7 @@ with tab2:
         st.plotly_chart(fig4, width='content')
     
     with col2:
-        st.subheader("📋 Configuration Details")
+        st.subheader("Configuration Details")
         
         st.markdown(f"""
         **Architecture:** {selected_archetype}  
@@ -508,16 +509,16 @@ with tab2:
         st.dataframe(stats_df, width='content', hide_index=True)
         
         st.markdown("---")
-        st.markdown("### 🎨 Bit-Width Legend")
+        st.markdown("### Bit-Width Legend")
         st.markdown("""
-        - 🔴 **2-bit**: Maximum compression
-        - 🟠 **4-bit**: Balanced compression
-        - 🟡 **8-bit**: Conservative quantization
-        - 🟢 **16-bit**: Full precision
+        - **2-bit**: Maximum compression
+        - **4-bit**: Balanced compression
+        - **8-bit**: Conservative quantization
+        - **16-bit**: Full precision
         """)
         
         st.markdown("---")
-        st.subheader("📄 Export Configuration")
+        st.subheader("Export Configuration")
         
         config_json = json.dumps({
             "archetype": selected_archetype,
@@ -526,7 +527,7 @@ with tab2:
         }, indent=2)
         
         st.download_button(
-            label="⬇️ Download Config (JSON)",
+            label="Download Config (JSON)",
             data=config_json,
             file_name=f"{selected_archetype}_config.json",
             mime="application/json"
@@ -534,7 +535,7 @@ with tab2:
 
 # TAB 3: Performance Metrics
 with tab3:
-    st.header("📈 Performance Analysis")
+    st.header("Performance Analysis")
     
     st.markdown("""
     <div class="info-box">
@@ -601,7 +602,7 @@ with tab3:
     )
     
     # Radar chart comparison
-    st.subheader("🎯 Multi-Objective Comparison")
+    st.subheader("Multi-Objective Comparison")
     
     col1, col2 = st.columns(2)
     
@@ -671,14 +672,14 @@ with tab3:
         fig6.add_trace(go.Bar(
             name='Baseline',
             x=list(metrics_comp.keys()),
-            y=[metrics_comp[k][0] for k in metrics_comp.keys()],
+            y=[metrics_comp[k][0] for k in metrics_comp],
             marker_color='#e74c3c'
         ))
         
         fig6.add_trace(go.Bar(
             name=selected_archetype,
             x=list(metrics_comp.keys()),
-            y=[metrics_comp[k][1] for k in metrics_comp.keys()],
+            y=[metrics_comp[k][1] for k in metrics_comp],
             marker_color='#667eea'
         ))
         
@@ -692,7 +693,7 @@ with tab3:
         st.plotly_chart(fig6, width='content')
     
     # Key insights
-    st.subheader("💡 Key Insights")
+    st.subheader("Key Insights")
     
     col1, col2, col3 = st.columns(3)
     
@@ -723,12 +724,12 @@ with tab3:
 
 # TAB 4: Inference Demo
 with tab4:
-    st.header("💬 Interactive Inference Playground")
+    st.header("Interactive Inference Playground")
     
     if not GPU_AVAILABLE:
         st.markdown("""
         <div class="warning-box">
-        ⚠️ <strong>GPU Not Available</strong><br>
+        <strong>GPU Not Available</strong><br>
         Live inference requires CUDA-enabled GPU. This demo shows the interface and expected behavior.
         Deploy locally with GPU for full functionality.
         </div>
@@ -765,16 +766,18 @@ with tab4:
         with col_c:
             top_p = st.slider("Top-p", 0.1, 1.0, 0.9, 0.05)
         
-        generate_btn = st.button("🚀 Generate", type="primary", width='content')
+        generate_btn = st.button("Generate", type="primary", width='content')
         
         if generate_btn:
             with st.spinner("Generating response..."):
                 if GPU_AVAILABLE and not MOCK_MODE:
                     try:
                         import time
+
                         import torch
-                        from src.core.validator import Validator
+
                         from src.core.search_space import Genome
+                        from src.core.validator import Validator
                         
                         # Load model (cached)
                         @st.cache_resource
@@ -809,28 +812,28 @@ with tab4:
                         output_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
                         latency = (end_t - start_t) * 1000
                         
-                        st.markdown("### 📝 Generated Output")
+                        st.markdown("### Generated Output")
                         st.text_area(
                             label="Output Text", 
                             value=output_text, 
                             height=300,  # Makes the box bigger (300px tall)
                             label_visibility="collapsed" # Hides the small label above the box
                         )
-                        st.caption(f"⏱️ Generation time: {latency:.2f}ms | 🔢 Tokens: {max_tokens}")
+                        st.caption(f"Generation time: {latency:.2f}ms | Tokens: {max_tokens}")
                         
                     except Exception as e:
-                        st.error(f"Generation failed: {str(e)}")
+                        st.error(f"Generation failed: {e!s}")
                         st.info("Showing mock output for demonstration")
                         mock_output = prompt + " transforming industries through intelligent automation, enhanced decision-making capabilities, and revolutionary approaches to problem-solving. As we continue to develop more sophisticated AI systems, the integration of machine learning and neural networks..."
                         
-                        st.markdown("### 📝 Generated Output (Demo Mode)")
+                        st.markdown("### Generated Output (Demo Mode)")
                         st.text_area(
                             label="Output Text", 
                             value=mock_output, 
                             height=300, 
                             label_visibility="collapsed"
                         )
-                        st.caption(f"⏱️ Estimated generation time: ~{metrics['predicted_latency_score']:.2f}ms")
+                        st.caption(f"Estimated generation time: ~{metrics['predicted_latency_score']:.2f}ms")
                 else:
                     # Mock generation for demo
                     import time
@@ -843,17 +846,17 @@ with tab4:
                     
                     mock_output = prompt + mock_outputs.get(prompt, mock_outputs["default"])
                     
-                    st.markdown("### 📝 Generated Output (Demo)")
+                    st.markdown("### Generated Output (Demo)")
                     st.text_area(
                         label="Output Text", 
                         value=mock_output, 
                         height=300, 
                         label_visibility="collapsed"
                     )
-                    st.caption(f"⏱️ Estimated latency: {metrics['predicted_latency_score']:.2f}ms | 🔢 Tokens: {max_tokens}")
+                    st.caption(f"Estimated latency: {metrics['predicted_latency_score']:.2f}ms | Tokens: {max_tokens}")
     
     with col2:
-        st.subheader("⚙️ Model Info")
+        st.subheader("Model Info")
         
         st.markdown(f"""
         **Base Model:** TinyLlama-1.1B  
@@ -863,7 +866,7 @@ with tab4:
         """)
         
         st.markdown("---")
-        st.subheader("📊 Expected Performance")
+        st.subheader("Expected Performance")
         
         st.metric("VRAM Usage", f"{metrics['predicted_vram_mb']:.0f} MB")
         st.metric("Latency", f"{metrics['predicted_latency_score']:.2f} ms")
@@ -871,7 +874,7 @@ with tab4:
         
         st.markdown("---")
         st.markdown("""
-        ### 💡 Tips
+        ### Tips
         - Lower temperature = more focused
         - Higher temperature = more creative
         - Top-p controls diversity
@@ -880,7 +883,7 @@ with tab4:
     
     # Example prompts
     st.markdown("---")
-    st.subheader("📚 Example Prompts")
+    st.subheader("Example Prompts")
     
     example_prompts = [
         "Explain quantum computing in simple terms:",
@@ -898,7 +901,7 @@ with tab4:
         with col:
             # Use on_click to update state before the rerun
             st.button(
-                f"📝 Try", 
+                "Try", 
                 key=f"example_{idx}", 
                 on_click=set_prompt, 
                 args=(example,)
@@ -911,7 +914,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("""
-    ### 🎯 Project Goals
+    ### Project Goals
     - Hardware-aware optimization
     - Multi-objective search
     - Production-ready deployment
@@ -919,7 +922,7 @@ with col1:
 
 with col2:
     st.markdown("""
-    ### 🔬 Technical Stack
+    ### Technical Stack
     - Genetic Algorithms (NSGA-II)
     - PyTorch Quantization
     - Streamlit Dashboard

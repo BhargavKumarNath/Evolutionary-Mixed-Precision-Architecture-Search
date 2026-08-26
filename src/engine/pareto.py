@@ -1,5 +1,6 @@
-from typing import List
+
 from ..core.evaluator import FitnessMetrics
+
 
 def dominates(f1: FitnessMetrics, f2: FitnessMetrics) -> bool:
     """
@@ -21,7 +22,7 @@ def dominates(f1: FitnessMetrics, f2: FitnessMetrics) -> bool:
     
     return all_better_or_equal and any_strictly_better
 
-def get_pareto_front(population_fitness: List[FitnessMetrics]) -> List[int]:
+def get_pareto_front(population_fitness: list[FitnessMetrics]) -> list[int]:
     """
     Identifies the indices of the non-dominated solutions in the population.
     Naive approach: O(N^2). Sufficient for N < 500.

@@ -8,7 +8,6 @@ htmlcov/
 .venv/
 .hydra/
 *.log
-code_refactor.md
 
 # Generated experiment state
 outputs/

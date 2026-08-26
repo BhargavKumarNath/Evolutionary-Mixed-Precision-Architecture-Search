@@ -1,6 +1,6 @@
 import torch
-import torch.nn as nn
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+
 
 class ModelWrapper:
     def __init__(self, model_name: str, device: str = "cuda"):

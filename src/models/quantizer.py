@@ -1,5 +1,6 @@
 import torch
 
+
 def fake_quantize_tensor(w: torch.Tensor, n_bits: int, group_size: int = 128) -> torch.Tensor:
     """Simulates quantisation effects on a weight tensor
     

@@ -1,14 +1,15 @@
-import sys
-import os
 import json
 import logging
+import os
+import sys
+
 import numpy as np
-from typing import List, Dict
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.engine.pareto import get_pareto_front
 from src.core.evaluator import FitnessMetrics
 from src.core.proxy_evaluator import ProxyEvaluator
 from src.core.search_space import Genome
+from src.engine.pareto import get_pareto_front
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ def load_checkpoint(path: str):
     with open(path, 'r') as f:
         return json.load(f)
 
-def find_knee_point(fitnesses: List[FitnessMetrics], pareto_indices: List[int]) -> int:
+def find_knee_point(fitnesses: list[FitnessMetrics], pareto_indices: list[int]) -> int:
     """
     Finds the 'Balanced' solution.
     Method: Normalize Loss and VRAM to 0-1 scale, find point closest to origin (0,0).
@@ -43,7 +44,7 @@ def find_knee_point(fitnesses: List[FitnessMetrics], pareto_indices: List[int]) 
     return pareto_indices[best_idx_in_pareto]
 
 def main():
-    logger.info(f"=== EMPAS: Exporting Artifacts ===")
+    logger.info("=== EMPAS: Exporting Artifacts ===")
     
     # 1. Load Data
     data = load_checkpoint(CHECKPOINT_PATH)

@@ -1,14 +1,17 @@
+import os
+import sys
+
 import hydra
 from omegaconf import DictConfig
-import sys
-import os
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.core.search_space import MixedPrecisionSearchSpace
 from src.core.evaluator import DummyEvaluator
+from src.core.search_space import MixedPrecisionSearchSpace
+
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig):
-    print(f"=== EMPAS: Testing Evaluator ({cfg.evaluator.type}) ===")
+    print("=== EMPAS: Testing Evaluator (dummy) ===")
 
     # 1. Setup Search Space
     space = MixedPrecisionSearchSpace(
@@ -17,11 +20,8 @@ def main(cfg: DictConfig):
     )
 
     # 2. Setup Evaluator
-    if cfg.evaluator.type == "dummy":
-        evaluator = DummyEvaluator()
-    else:
-        raise ValueError(f"Unknown evaluator type: {cfg.evaluator.type}")
-    
+    evaluator = DummyEvaluator()
+
     # 3. Sample and Evaluate
     print("\n--- Simulating 5 Evaluations ---")
     for i in range(5):

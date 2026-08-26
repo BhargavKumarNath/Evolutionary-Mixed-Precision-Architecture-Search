@@ -1,7 +1,4 @@
-import sys
-import os
 import numpy as np
-import matplotlib.pyplot as plt
 
 GENES = [4, 4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 4]
 
@@ -18,7 +15,7 @@ def analyze_depth_sensitivity(genes):
     middle_layers = genes[idx_early:idx_late]
     late_layers = genes[idx_late:]
     
-    print(f"=== EMPAS Architectural Intuition ===")
+    print("=== EMPAS Architectural Intuition ===")
     print(f"Total Layers: {num_layers}")
     print(f"\n1. Early Layers (0-{idx_early-1}):")
     print(f"   Avg Precision: {np.mean(early_layers):.1f}-bit")
@@ -33,7 +30,7 @@ def analyze_depth_sensitivity(genes):
     print(f"   Genes: {late_layers}")
     
     # Interpretation
-    print(f"\n=== Lessons Learned (for README) ===")
+    print("\n=== Lessons Learned (for README) ===")
     
     print("Why this distribution?")
     if np.mean(early_layers) > np.mean(middle_layers):
