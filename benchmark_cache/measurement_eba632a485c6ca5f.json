@@ -1,0 +1,44 @@
+{
+  "design_name": "uniform_fp16",
+  "genome": [
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16
+  ],
+  "predicted_quality_loss": 0.0,
+  "measured_mean_loss": 2.5713714361190796,
+  "measured_perplexity": 13.083755677460648,
+  "measured_latency_ms": 486.11438274383545,
+  "measured_peak_memory_mb": 2149.3671875,
+  "measured_throughput_tokens_per_sec": 263.31251356422285,
+  "hardware_identity": {
+    "gpu_name": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "compute_capability": [
+      8,
+      9
+    ],
+    "total_memory_bytes": 8585216000,
+    "multi_processor_count": 36,
+    "cuda_version": "12.8",
+    "device_index": 0
+  }
+}

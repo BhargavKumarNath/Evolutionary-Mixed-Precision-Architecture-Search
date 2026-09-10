@@ -1,0 +1,44 @@
+{
+  "design_name": "alternating_8_16",
+  "genome": [
+    8,
+    16,
+    8,
+    16,
+    8,
+    16,
+    8,
+    16,
+    8,
+    16,
+    8,
+    16,
+    8,
+    16,
+    8,
+    16,
+    8,
+    16,
+    8,
+    16,
+    8,
+    16
+  ],
+  "predicted_quality_loss": 0.001356363296508789,
+  "measured_mean_loss": 2.5774325728416443,
+  "measured_perplexity": 13.163298927205007,
+  "measured_latency_ms": 28.721332550048828,
+  "measured_peak_memory_mb": 2116.83203125,
+  "measured_throughput_tokens_per_sec": 4456.617734464497,
+  "hardware_identity": {
+    "gpu_name": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "compute_capability": [
+      8,
+      9
+    ],
+    "total_memory_bytes": 8585216000,
+    "multi_processor_count": 36,
+    "cuda_version": "12.8",
+    "device_index": 0
+  }
+}

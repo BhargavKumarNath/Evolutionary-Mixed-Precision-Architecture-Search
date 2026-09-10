@@ -1,0 +1,205 @@
+{
+  "model_version": "v1",
+  "calibration_points": [
+    {
+      "genome": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "proxy": {
+        "predicted_quality_loss": 0.0,
+        "model_version": "v1"
+      },
+      "measured": {
+        "mean_loss": 2.5713714361190796,
+        "perplexity": 13.083755677460648,
+        "peak_memory_mb": 2149.3671875,
+        "latency_ms": 486.11438274383545,
+        "throughput_tokens_per_sec": 263.31251356422285
+      }
+    },
+    {
+      "genome": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "proxy": {
+        "predicted_quality_loss": 0.003046691417694092,
+        "model_version": "v1"
+      },
+      "measured": {
+        "mean_loss": 2.5855637192726135,
+        "perplexity": 13.270767969442499,
+        "peak_memory_mb": 1230.30859375,
+        "latency_ms": 52.78807878494263,
+        "throughput_tokens_per_sec": 2424.789894731137
+      }
+    },
+    {
+      "genome": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "proxy": {
+        "predicted_quality_loss": 0.10873425006866455,
+        "model_version": "v1"
+      },
+      "measured": {
+        "mean_loss": 2.636415421962738,
+        "perplexity": 13.963062107599553,
+        "peak_memory_mb": 792.6142578125,
+        "latency_ms": 79.22333478927612,
+        "throughput_tokens_per_sec": 1615.6855848149225
+      }
+    },
+    {
+      "genome": [
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8
+      ],
+      "proxy": {
+        "predicted_quality_loss": 0.0373418927192688,
+        "model_version": "v1"
+      },
+      "measured": {
+        "mean_loss": 2.616415858268738,
+        "perplexity": 13.68658092470498,
+        "peak_memory_mb": 1436.642578125,
+        "latency_ms": 76.35712623596191,
+        "throughput_tokens_per_sec": 1676.3333864143756
+      }
+    },
+    {
+      "genome": [
+        8,
+        16,
+        8,
+        16,
+        8,
+        16,
+        8,
+        16,
+        8,
+        16,
+        8,
+        16,
+        8,
+        16,
+        8,
+        16,
+        8,
+        16,
+        8,
+        16,
+        8,
+        16
+      ],
+      "proxy": {
+        "predicted_quality_loss": 0.001356363296508789,
+        "model_version": "v1"
+      },
+      "measured": {
+        "mean_loss": 2.5774325728416443,
+        "perplexity": 13.163298927205007,
+        "peak_memory_mb": 2116.83203125,
+        "latency_ms": 28.721332550048828,
+        "throughput_tokens_per_sec": 4456.617734464497
+      }
+    }
+  ],
+  "correlation": {
+    "model_version": "v1",
+    "calibration_point_count": 5,
+    "proxy_to_measured_loss_correlation": 0.9403021400186383,
+    "proxy_to_measured_memory_correlation": -0.7885672687066858,
+    "proxy_to_measured_latency_correlation": -0.28202503104918497,
+    "proxy_mean": 0.030095839500427247,
+    "proxy_std": 0.04171301562740733,
+    "measured_loss_mean": 2.5974398016929627,
+    "measured_loss_std": 0.024900120169341785,
+    "measured_memory_mean": 1545.1529296875,
+    "measured_memory_std": 523.2796134845594,
+    "measured_latency_mean": 144.640851020813,
+    "measured_latency_std": 171.7093811634642
+  }
+}

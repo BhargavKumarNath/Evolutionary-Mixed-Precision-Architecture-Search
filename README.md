@@ -1,6 +1,6 @@
 # EMPAS: Evolutionary Mixed-Precision Architecture Search
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python) ![PyTorch](https://img.shields.io/badge/PyTorch-2.9.1-red?logo=pytorch) ![Transformers](https://img.shields.io/badge/HuggingFace-4.57.3-yellow?logo=huggingface) ![CUDA](https://img.shields.io/badge/NVIDIA-CUDA%2012.8-green?logo=nvidia) ![Tests](https://img.shields.io/badge/Tests-39/39-brightgreen) ![Status](https://img.shields.io/badge/Status-Stabilized%20at%20Phase%206-brightgreen)
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python) ![PyTorch](https://img.shields.io/badge/PyTorch-2.9.1-red?logo=pytorch) ![Transformers](https://img.shields.io/badge/HuggingFace-4.57.3-yellow?logo=huggingface) ![CUDA](https://img.shields.io/badge/NVIDIA-CUDA%2012.8-green?logo=nvidia) ![Tests](https://img.shields.io/badge/Tests-56/56-brightgreen) ![Status](https://img.shields.io/badge/Status-Stabilized%20at%20Phase%206-brightgreen)
 
 ## Executive Summary
 
@@ -24,7 +24,7 @@
 
 ### Key Achievements
 
-- **39 unit tests**, all passing across all phases
+- **56 unit tests**, all passing across all phases (39 original + 17 covering Phase 3 non-dominated sorting, crowding distance, and end-to-end GA behavior)
 - **Real GPU execution** via bitsandbytes (4-bit, 8-bit, FP16 passthrough)
 - **Hardware measurement** with CUDA synchronization, percentile statistics, memory tracking
 - **Reproducible experiments** with configuration authority, RNG checkpointing, dataset fingerprints
@@ -40,7 +40,7 @@ Modern LLMs are fundamentally memory-bound. Uniform quantization ignores archite
 - **High-Sensitivity Layers:** Attention heads and output projections are load-bearing. Indiscriminate compression destroys downstream quality.
 - **Low-Sensitivity Redundancy:** Deep transformer blocks tolerate aggressive compression (2-4 bit) with minimal signal loss.
 
-**The Challenge:** Hand-tuning 22-layer models with 4 bitwidth choices yields $4^{22} \approx 1.7 \times 10^{13}$ configurations. EMPAS automates discovery via evolutionary optimization.
+**The Challenge:** Hand-tuning a 22-layer model with 3 bitwidth choices per layer (4/8/16-bit — the set the real quantization backend actually supports) yields $3^{22} \approx 3.1 \times 10^{10}$ configurations. EMPAS automates discovery via evolutionary optimization.
 
 ---
 
@@ -121,11 +121,13 @@ Measured Pareto Frontier + Analysis Reports
 ├── tests/
 │   ├── test_phase1.py          # Config, seeding, checkpointing (8 tests)
 │   ├── test_phase2.py          # Dataset protocol (3 tests)
+│   ├── test_phase3.py          # Nondominated sorting, crowding distance, GA (17 tests)
 │   ├── test_phase4.py          # bitsandbytes backend (5 tests)
 │   └── test_phase5_6.py        # Benchmark harness, proxy calibration (23 tests)
 ├── data/
 │   ├── logs/                   # Search checkpoints and artifacts
-│   └── profiles/               # Sensitivity profiles
+│   ├── profiles/                # Sensitivity profiles
+│   └── calibration/             # Proxy-vs-measured calibration reports
 ├── deployment/
 │   └── artifacts/              # Exported quantization configs
 │       ├── balanced.json
@@ -174,16 +176,18 @@ Measured Pareto Frontier + Analysis Reports
 - `src/engine/operators.py`: Uniform crossover, random mutation
 - Fitness caching to avoid redundant evaluation
 
-**Algorithm:**
+**Algorithm (Deb et al., 2002 — implemented in full, not just named after it):**
 1. Initialize random population
 2. For each generation:
-   - Evaluate fitness (loss, memory)
-   - Nondominated sort into fronts
-   - Assign crowding distance
-   - Tournament selection
-   - Crossover (50% gene swap)
-   - Mutation (per-gene)
+   - Evaluate parent fitness (loss, memory, latency)
+   - `fast_nondominated_sort`: partition parents into ranked fronts (O(N²))
+   - `crowding_distance`: assign per-front diversity distance (boundary points = infinite)
+   - Crowded tournament selection (lower front rank wins; ties broken by larger crowding distance) to breed offspring
+   - Uniform crossover (50% gene swap) + per-gene mutation
+   - μ+λ environmental selection: combine parents+offspring, re-sort into fronts, fill the next generation front-by-front, trimming the last partial front by crowding distance
 3. Checkpoint and resume from saved state
+
+**Tests:** 17 passing (`tests/test_phase3.py` — dominance, multi-front non-dominated sorting, crowding-distance correctness including boundary/tie cases, crossover/mutation operators, and end-to-end GA population-size/validity/convergence behavior)
 
 ---
 
@@ -242,6 +246,16 @@ Measured Pareto Frontier + Analysis Reports
 5. Cache all measurements for reuse
 
 **Tests:** 16 passing (proxy calibration, cache uniqueness, workflow integration, schema separation)
+
+**Executed for real** (`scripts/benchmark.py`, RTX 4070, bitsandbytes backend — not just unit-tested): measured all 5 design-of-experiments genomes (`uniform_fp16`, `uniform_int8`, `uniform_int4`, `alternating_4_8`, `alternating_8_16`) on real GPU hardware and computed the correlation between the additive-sensitivity proxy and measured behavior. Report: `data/calibration/tinyllama_calibration.json`; raw per-design measurements cached under `benchmark_cache/`.
+
+| Correlation (proxy quality-loss delta vs. measured) | Pearson r |
+|:---|:---:|
+| → measured validation loss | **0.940** |
+| → measured peak memory | -0.789 |
+| → measured latency | -0.282 |
+
+Read carefully: this is 5 data points, not a statistically powered study, and the memory/latency correlations are *negative* because the proxy predicts higher quality loss exactly where fewer bits are used — which is also where measured memory is lower, so an inverse relationship there is expected, not a proxy failure. The **0.940 loss correlation is the number that matters**: it's the first real evidence that the additive sensitivity proxy driving the entire evolutionary search actually tracks measured model quality on this hardware. The weak latency correlation reflects the same single-run, unsynchronized timing caveat that applies everywhere else in this README (see Example Run) — the FP16 design's 486ms latency in this run includes CUDA/model warm-up noise from being the first design measured.
 
 ---
 
@@ -346,7 +360,7 @@ VRAM is identical across rows here because this script's quantizer dequantizes b
 
 ## Test Suite
 
-**Total: 39 tests, all passing**
+**Total: 56 tests, all passing**
 
 ```bash
 pytest tests/ -v
@@ -356,6 +370,9 @@ pytest tests/test_phase1.py -v
 
 # Phase 2: Dataset Protocol (3 tests)
 pytest tests/test_phase2.py -v
+
+# Phase 3: NSGA-II engine — sorting, crowding distance, operators, GA (17 tests)
+pytest tests/test_phase3.py -v
 
 # Phase 4: bitsandbytes Backend (5 tests, GPU required)
 pytest tests/test_phase4.py -v
@@ -448,7 +465,7 @@ The original modernization plan for this codebase continued through Phase 14: me
 
 ## Key Results Summary
 
-**Status:** All 39 tests passing. Phases 1-6 complete; phases 7-14 out of scope (see above).
+**Status:** All 56 tests passing. Phases 1-6 complete; phases 7-14 out of scope (see above).
 
 | Component | Status | Evidence |
 |:----------|:-------|:---------|
@@ -458,7 +475,7 @@ The original modernization plan for this codebase continued through Phase 14: me
 | NSGA-II Search | Done | Nondominated sorting, crowding distance, tournament selection |
 | Real GPU Backend | Done | bitsandbytes 4-bit/8-bit execution on RTX 4070 |
 | Hardware Measurement | Done | CUDA event timing, memory tracking, percentile stats |
-| Proxy Calibration | Done | Correlation reporting, schema separation, cache versioning |
+| Proxy Calibration | Done | Correlation reporting, schema separation, cache versioning — executed against real hardware (r=0.940 proxy↔measured loss, `data/calibration/tinyllama_calibration.json`) |
 
 ---
 

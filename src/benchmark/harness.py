@@ -8,6 +8,8 @@ import torch
 import torch.cuda
 from torch import nn
 
+from ..hardware.profiler import get_hardware_identity as _get_hardware_identity
+
 logger = logging.getLogger(__name__)
 
 
@@ -76,16 +78,19 @@ class BenchmarkResult:
 
 
 def get_hardware_identity() -> dict[str, Any]:
-    """Record the current GPU and CUDA state for measurement provenance."""
-    if not torch.cuda.is_available():
-        raise BenchmarkError("CUDA is required for hardware benchmarking")
-    return {
-        "gpu_name": torch.cuda.get_device_name(0),
-        "compute_capability": torch.cuda.get_device_capability(0),
-        "total_memory_bytes": torch.cuda.get_device_properties(0).total_memory,
-        "cuda_version": torch.version.cuda,
-        "device_index": 0,
-    }
+    """Record the current GPU and CUDA state for measurement provenance.
+
+    Delegates to ``src.hardware.profiler`` (the single source of truth for
+    device introspection) and re-raises its error as ``BenchmarkError`` so
+    existing callers of this module don't need to catch a second exception
+    type.
+    """
+    from ..hardware.profiler import HardwareProfilerError
+
+    try:
+        return _get_hardware_identity()
+    except HardwareProfilerError as exc:
+        raise BenchmarkError(str(exc)) from exc
 
 
 def measure_model_load(model_loader, device: str = "cuda") -> tuple[nn.Module, MemoryStats]:

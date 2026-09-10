@@ -12,7 +12,7 @@ from ..core.evaluator import Evaluator, FitnessMetrics
 from ..core.search_space import Genome, MixedPrecisionSearchSpace, SearchSpace
 from ..utils.reproducibility import capture_rng_state, restore_rng_state
 from .operators import crossover_uniform, mutate_random_gene
-from .pareto import get_pareto_front
+from .pareto import crowded_comparison_key, crowding_distance, fast_nondominated_sort
 
 logger = logging.getLogger(__name__)
 
@@ -62,20 +62,18 @@ class GAEngine:
                 fitnesses.append(fit)
         return fitnesses
 
-    def select_tournament(self, population: list[Genome], fitnesses: list[FitnessMetrics]) -> Genome:
+    def select_tournament(
+        self,
+        population: list[Genome],
+        rank: dict[int, int],
+        distance: dict[int, float],
+    ) -> Genome:
+        """NSGA-II crowded binary/k-way tournament: lower front rank wins;
+        ties within the same front are broken by larger crowding distance
+        (preferring the less-crowded, more diverse individual)."""
         indices = random.sample(range(len(population)), self.cfg['tournament_size'])
-        best_idx = indices[0]
-        for idx in indices[1:]:
-            if self._dominates(fitnesses[idx], fitnesses[best_idx]) or (
-                not self._dominates(fitnesses[best_idx], fitnesses[idx])
-                and random.random() < 0.5
-            ):
-                best_idx = idx
+        best_idx = min(indices, key=lambda idx: crowded_comparison_key(idx, rank, distance))
         return population[best_idx]
-
-    def _dominates(self, f1: FitnessMetrics, f2: FitnessMetrics) -> bool:
-        from .pareto import dominates
-        return dominates(f1, f2)
 
     def save_checkpoint(self, generation: int, stats: dict[str, Any]) -> None:
         """Save population, fitness, RNG, and experiment identity for resume."""
@@ -126,68 +124,34 @@ class GAEngine:
         return str(profile_path)
 
     def step(self, generation: int):
+        """One NSGA-II generation: rank parents, breed offspring via crowded
+        tournament selection, then select the next generation from the
+        combined parent+offspring pool by front rank and crowding distance
+        (Deb et al., 2002)."""
         logger.info(f"--- Generation {generation} ---")
-        
-        # 1. Evaluate
-        fitnesses = self.evaluate_population(self.population)
-        
-        # 2. Pareto Front
-        pareto_indices = get_pareto_front(fitnesses)
-        elites = [self.population[i] for i in pareto_indices]
-        
-        # 3. Stats & Logging
-        losses = [f.validation_loss for f in fitnesses]
-        vrams = [f.vram_peak_mb for f in fitnesses]
-        
-        stats = {
-            "gen": generation,
-            "min_loss": min(losses),
-            "avg_loss": sum(losses) / len(losses),
-            "min_vram": min(vrams),
-            "avg_vram": sum(vrams) / len(vrams),
-            "num_elites": len(elites)
-        }
-        
-        logger.info(f"Stats: Loss={stats['min_loss']:.4f}, VRAM={stats['min_vram']:.0f}MB, Elites={stats['num_elites']}")
-        self.history.append(stats)
-        
-        # WandB Logging
-        if self.tracking_cfg.get("enabled", False):
-            # Log metrics
-            wandb.log(stats, step=generation)
-            
-            # Create a Scatter Plot (Loss vs VRAM)
-            table_data = []
-            for genome, fit in zip(self.population, fitnesses):
-                is_pareto = genome in elites
-                table_data.append([fit.validation_loss, fit.vram_peak_mb, fit.latency_ms, str(genome.genes), is_pareto])
-            
-            table = wandb.Table(data=table_data, columns=["loss", "vram", "latency", "genes", "is_pareto"])
-            
-            wandb.log({
-                "population_plot": wandb.plot.scatter(
-                    table, "vram", "loss", title=f"Gen {generation}: Loss vs VRAM"
-                )
-            }, step=generation)
+        pop_size = self.cfg['pop_size']
 
-        # 4. Evolution (Selection, Crossover, Mutation)
-        next_pop = []
-        
-        # Elitism
-        num_elites_to_keep = min(len(elites), self.cfg['pop_size'] // 2)
-        random.shuffle(elites)
-        next_pop.extend(elites[:num_elites_to_keep])
-        
-        while len(next_pop) < self.cfg['pop_size']:
-            p1 = self.select_tournament(self.population, fitnesses)
-            p2 = self.select_tournament(self.population, fitnesses)
-            
+        # 1. Evaluate and rank the current (parent) population. Rank/distance
+        #    drive crowded tournament selection when breeding offspring.
+        parent_fitnesses = self.evaluate_population(self.population)
+        parent_fronts = fast_nondominated_sort(parent_fitnesses)
+        parent_rank = {idx: front_no for front_no, front in enumerate(parent_fronts) for idx in front}
+        parent_distance: dict[int, float] = {}
+        for front in parent_fronts:
+            parent_distance.update(crowding_distance(front, parent_fitnesses))
+
+        # 2. Breed offspring: crowded tournament selection + crossover + mutation
+        offspring: list[Genome] = []
+        mutation_space = cast("MixedPrecisionSearchSpace", self.space)
+        while len(offspring) < pop_size:
+            p1 = self.select_tournament(self.population, parent_rank, parent_distance)
+            p2 = self.select_tournament(self.population, parent_rank, parent_distance)
+
             if random.random() < self.cfg['crossover_rate']:
                 c1, c2 = crossover_uniform(p1, p2)
             else:
                 c1, c2 = p1, p2
-                
-            mutation_space = cast("MixedPrecisionSearchSpace", self.space)
+
             c1 = mutate_random_gene(c1, mutation_space, self.cfg['mutation_rate'])
             c2 = mutate_random_gene(c2, mutation_space, self.cfg['mutation_rate'])
 
@@ -195,12 +159,69 @@ class GAEngine:
                 c1 = p1
             if not self.space.validate(c2):
                 c2 = p2
-            
-            next_pop.append(c1)
-            if len(next_pop) < self.cfg['pop_size']:
-                next_pop.append(c2)
-        
-        self.population = next_pop
+
+            offspring.append(c1)
+            if len(offspring) < pop_size:
+                offspring.append(c2)
+
+        # 3. mu+lambda: combine parents and offspring, then rank the union
+        offspring_fitnesses = self.evaluate_population(offspring)
+        combined_population = self.population + offspring
+        combined_fitnesses = parent_fitnesses + offspring_fitnesses
+        combined_fronts = fast_nondominated_sort(combined_fitnesses)
+
+        # 4. Environmental selection: fill the next generation front-by-front;
+        #    the last, partially-included front is trimmed by crowding
+        #    distance so the population stays spread across the trade-off
+        #    surface instead of clustering.
+        next_indices: list[int] = []
+        for front in combined_fronts:
+            if len(next_indices) + len(front) <= pop_size:
+                next_indices.extend(front)
+            else:
+                remaining = pop_size - len(next_indices)
+                front_distance = crowding_distance(front, combined_fitnesses)
+                ranked_front = sorted(front, key=lambda idx: -front_distance[idx])
+                next_indices.extend(ranked_front[:remaining])
+                break
+
+        self.population = [combined_population[i] for i in next_indices]
+
+        # 5. Stats & logging. Front 0 of the parent+offspring union is this
+        #    generation's actual Pareto front (num_elites is its size).
+        pareto_front0 = combined_fronts[0]
+        losses = [f.validation_loss for f in combined_fitnesses]
+        vrams = [f.vram_peak_mb for f in combined_fitnesses]
+
+        stats = {
+            "gen": generation,
+            "min_loss": min(losses),
+            "avg_loss": sum(losses) / len(losses),
+            "min_vram": min(vrams),
+            "avg_vram": sum(vrams) / len(vrams),
+            "num_elites": len(pareto_front0),
+        }
+
+        logger.info(f"Stats: Loss={stats['min_loss']:.4f}, VRAM={stats['min_vram']:.0f}MB, Elites={stats['num_elites']}")
+        self.history.append(stats)
+
+        # WandB Logging
+        if self.tracking_cfg.get("enabled", False):
+            wandb.log(stats, step=generation)
+
+            pareto_set = set(pareto_front0)
+            table_data = []
+            for i, (genome, fit) in enumerate(zip(combined_population, combined_fitnesses)):
+                is_pareto = i in pareto_set
+                table_data.append([fit.validation_loss, fit.vram_peak_mb, fit.latency_ms, str(genome.genes), is_pareto])
+
+            table = wandb.Table(data=table_data, columns=["loss", "vram", "latency", "genes", "is_pareto"])
+
+            wandb.log({
+                "population_plot": wandb.plot.scatter(
+                    table, "vram", "loss", title=f"Gen {generation}: Loss vs VRAM"
+                )
+            }, step=generation)
 
         checkpoint_freq = int(self.cfg.get("checkpoint_freq", 1))
         if generation % checkpoint_freq == 0:

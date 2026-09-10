@@ -48,6 +48,7 @@ paths:
   search_output_dir: "./data/logs/search_tinyllama_wandb"
   manifest_path: "./data/manifests/search_manifest.json"
   profile_path: "./data/profiles/tinyllama_sensitivity.json"
+  calibration_report_path: "./data/calibration/tinyllama_calibration.json"
   resume_from: null
 
 validation:
