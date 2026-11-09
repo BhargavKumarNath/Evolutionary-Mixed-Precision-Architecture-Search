@@ -57,13 +57,44 @@ class MixedPrecisionSearchSpace(SearchSpace):
         self.max_avg_bitwidth = max_avg_bitwidth
     
     def sample(self) -> Genome:
-        """Uniformly sample a valid bit-width vector."""
-        for _ in range(10000):
-            genes = [random.choice(self.choices) for _ in range(self.num_layers)]
-            genome = Genome(genes=genes)
+        """Sample a valid bit-width vector (uniform, then repaired if the average cap is tight)."""
+        return self.sample_with(random)
+
+    def sample_with(self, rng) -> Genome:
+        """As ``sample`` using ``rng`` (a ``random.Random`` or the ``random`` module).
+
+        Tries rejection sampling first (exactly uniform over feasible genomes). When the
+        feasible region is tiny (a tight average-bit cap) it falls back to uniform sampling
+        followed by ``repair``.
+        """
+        for _ in range(200):
+            genome = Genome(genes=[rng.choice(self.choices) for _ in range(self.num_layers)])
             if self.validate(genome):
                 return genome
-        raise RuntimeError("Could not sample a genome satisfying search-space constraints")
+        genome = Genome(genes=[rng.choice(self.choices) for _ in range(self.num_layers)])
+        return self.repair(genome, rng)
+
+    def repair(self, genome: Genome, rng=random) -> Genome:
+        """Move a genome into the feasible average-bit range by changing random layers one step."""
+        ordered = sorted(self.choices)
+        genes = list(genome.genes)
+        guard = 0
+        while guard < 100_000:
+            guard += 1
+            avg = sum(genes) / len(genes)
+            if self.max_avg_bitwidth is not None and avg > self.max_avg_bitwidth:
+                movable = [i for i, g in enumerate(genes) if ordered.index(g) > 0]
+                step = -1
+            elif self.min_avg_bitwidth is not None and avg < self.min_avg_bitwidth:
+                movable = [i for i, g in enumerate(genes) if ordered.index(g) < len(ordered) - 1]
+                step = 1
+            else:
+                return Genome(genes=genes)
+            if not movable:
+                break
+            i = rng.choice(movable)
+            genes[i] = ordered[ordered.index(genes[i]) + step]
+        raise RuntimeError("Could not repair genome into the search-space constraints")
 
     def validate(self, genome: Genome) -> bool:
         if len(genome.genes) != self.num_layers:

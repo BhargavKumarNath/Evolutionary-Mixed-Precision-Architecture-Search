@@ -1,0 +1,850 @@
+{
+  "n_genomes": 30,
+  "n_val_chunks": 585,
+  "n_val_tokens": 299520,
+  "measured_fp16_nll": 2.361367517047458,
+  "measured_fp16_ppl": 10.605444666693922,
+  "quality": {
+    "bnb": {
+      "all_30": {
+        "pearson": {
+          "value": 0.9878414348906984,
+          "ci95": [
+            0.9745361470243331,
+            0.9967643181560928
+          ],
+          "n": 30
+        },
+        "spearman": {
+          "value": 0.9875417130144604,
+          "ci95": [
+            0.9445785243242502,
+            0.9982138870283548
+          ],
+          "n": 30
+        },
+        "mae_nats": 0.0016332071588143352,
+        "slope_measured_on_predicted": 0.9033247513575801
+      },
+      "excluding_fp16": {
+        "pearson": {
+          "value": 0.9869973484179724,
+          "ci95": [
+            0.97314823080896,
+            0.9964410307621412
+          ],
+          "n": 29
+        },
+        "spearman": {
+          "value": 0.9862068965517239,
+          "ci95": [
+            0.9391333726195286,
+            0.998019801980198
+          ],
+          "n": 29
+        },
+        "mae_nats": 0.0016895246470493123,
+        "slope_measured_on_predicted": 0.9002739555472751
+      },
+      "non_front": {
+        "pearson": {
+          "value": 0.9841147733677631,
+          "ci95": [
+            0.9614585658831504,
+            0.9966215862514693
+          ],
+          "n": 20
+        },
+        "spearman": {
+          "value": 0.9774436090225563,
+          "ci95": [
+            0.890909090909091,
+            1.0
+          ],
+          "n": 20
+        },
+        "mae_nats": 0.0019942058710396894,
+        "slope_measured_on_predicted": 0.9159705305188983
+      },
+      "front_only": {
+        "pearson": {
+          "value": 0.9952358338558264,
+          "ci95": [
+            0.990872014786838,
+            0.9995070332006424
+          ],
+          "n": 10
+        },
+        "spearman": {
+          "value": 0.9999999999999999,
+          "ci95": [
+            0.9999999999999999,
+            1.0
+          ],
+          "n": 10
+        },
+        "mae_nats": 0.0009112097343636272,
+        "slope_measured_on_predicted": 0.9004022242714101
+      }
+    },
+    "fake": {
+      "all_30": {
+        "pearson": {
+          "value": 0.9332347930762923,
+          "ci95": [
+            0.86161115142361,
+            0.9716606374406548
+          ],
+          "n": 30
+        },
+        "spearman": {
+          "value": 0.9074527252502781,
+          "ci95": [
+            0.7403894345436767,
+            0.9790086030975179
+          ],
+          "n": 30
+        },
+        "mae_nats": 0.010660727732254956,
+        "slope_measured_on_predicted": 0.5099663798052789
+      },
+      "excluding_fp16": {
+        "pearson": {
+          "value": 0.9310748467897934,
+          "ci95": [
+            0.8566920573772465,
+            0.9706676261725102
+          ],
+          "n": 29
+        },
+        "spearman": {
+          "value": 0.8975369458128076,
+          "ci95": [
+            0.7145648704045122,
+            0.9757545769421078
+          ],
+          "n": 29
+        },
+        "mae_nats": 0.011028339033367196,
+        "slope_measured_on_predicted": 0.5014511660866554
+      },
+      "non_front": {
+        "pearson": {
+          "value": 0.9331879260938561,
+          "ci95": [
+            0.8633811803347496,
+            0.9721349763449397
+          ],
+          "n": 20
+        },
+        "spearman": {
+          "value": 0.9413533834586465,
+          "ci95": [
+            0.7840735068912711,
+            0.9938840254919814
+          ],
+          "n": 20
+        },
+        "mae_nats": 0.012061557422320356,
+        "slope_measured_on_predicted": 0.47399944265502725
+      },
+      "front_only": {
+        "pearson": {
+          "value": 0.9787539254927808,
+          "ci95": [
+            0.9363345692661194,
+            0.9961070615458825
+          ],
+          "n": 10
+        },
+        "spearman": {
+          "value": 0.9878787878787878,
+          "ci95": [
+            0.8701298701298701,
+            1.0
+          ],
+          "n": 10
+        },
+        "mae_nats": 0.007859068352124155,
+        "slope_measured_on_predicted": 0.5737060577331738
+      }
+    }
+  },
+  "points_bnb": [
+    {
+      "name": "uniform_fp16",
+      "kind": "doe",
+      "avg_bits": 16.0,
+      "predicted": 0.0,
+      "measured": 0.0
+    },
+    {
+      "name": "uniform_int8",
+      "kind": "doe",
+      "avg_bits": 8.0,
+      "predicted": 0.026524142362177372,
+      "measured": 0.018846875378209393
+    },
+    {
+      "name": "uniform_int4",
+      "kind": "doe",
+      "avg_bits": 4.0,
+      "predicted": 0.049310894683003426,
+      "measured": 0.048624742132985954
+    },
+    {
+      "name": "alternating_4_8",
+      "kind": "doe",
+      "avg_bits": 6.0,
+      "predicted": 0.036084091290831566,
+      "measured": 0.03251669366135568
+    },
+    {
+      "name": "alternating_8_16",
+      "kind": "doe",
+      "avg_bits": 12.0,
+      "predicted": 0.012545394711196423,
+      "measured": 0.01068549400720853
+    },
+    {
+      "name": "random_00",
+      "kind": "random",
+      "avg_bits": 4.7272727272727275,
+      "predicted": 0.04230525437742472,
+      "measured": 0.037996870432144725
+    },
+    {
+      "name": "random_01",
+      "kind": "random",
+      "avg_bits": 5.2727272727272725,
+      "predicted": 0.037693893536925316,
+      "measured": 0.03701435826782484
+    },
+    {
+      "name": "random_02",
+      "kind": "random",
+      "avg_bits": 6.363636363636363,
+      "predicted": 0.04591971915215254,
+      "measured": 0.0415374694726407
+    },
+    {
+      "name": "random_03",
+      "kind": "random",
+      "avg_bits": 7.090909090909091,
+      "predicted": 0.03222911711782217,
+      "measured": 0.03276689663911503
+    },
+    {
+      "name": "random_04",
+      "kind": "random",
+      "avg_bits": 7.636363636363637,
+      "predicted": 0.038245403207838535,
+      "measured": 0.029485210190471456
+    },
+    {
+      "name": "random_05",
+      "kind": "random",
+      "avg_bits": 8.181818181818182,
+      "predicted": 0.028086204081773758,
+      "measured": 0.026629282674218935
+    },
+    {
+      "name": "random_06",
+      "kind": "random",
+      "avg_bits": 9.090909090909092,
+      "predicted": 0.029848674312233925,
+      "measured": 0.031511750791827
+    },
+    {
+      "name": "random_07",
+      "kind": "random",
+      "avg_bits": 10.181818181818182,
+      "predicted": 0.016667296178638935,
+      "measured": 0.015570013747256084
+    },
+    {
+      "name": "random_08",
+      "kind": "random",
+      "avg_bits": 10.545454545454545,
+      "predicted": 0.020834418013691902,
+      "measured": 0.020357608183836362
+    },
+    {
+      "name": "random_09",
+      "kind": "random",
+      "avg_bits": 11.454545454545455,
+      "predicted": 0.010778287425637245,
+      "measured": 0.01133235540145483
+    },
+    {
+      "name": "random_10",
+      "kind": "random",
+      "avg_bits": 12.363636363636363,
+      "predicted": 0.019250440411269665,
+      "measured": 0.01844971995068434
+    },
+    {
+      "name": "random_11",
+      "kind": "random",
+      "avg_bits": 12.909090909090908,
+      "predicted": 0.011652030982077122,
+      "measured": 0.011940076412298772
+    },
+    {
+      "name": "random_12",
+      "kind": "random",
+      "avg_bits": 13.818181818181818,
+      "predicted": 0.013294360600411892,
+      "measured": 0.01333765148097621
+    },
+    {
+      "name": "random_13",
+      "kind": "random",
+      "avg_bits": 14.727272727272727,
+      "predicted": 0.007338359951972961,
+      "measured": 0.006544092373970134
+    },
+    {
+      "name": "random_14",
+      "kind": "random",
+      "avg_bits": 15.272727272727273,
+      "predicted": 0.0004949532449245453,
+      "measured": 0.0007457288921388638
+    },
+    {
+      "name": "front_00",
+      "kind": "front",
+      "avg_bits": 5.2727272727272725,
+      "predicted": 0.03449895419180393,
+      "measured": 0.030901383334755117
+    },
+    {
+      "name": "front_01",
+      "kind": "front",
+      "avg_bits": 5.818181818181818,
+      "predicted": 0.023673304356634617,
+      "measured": 0.02390470606649009
+    },
+    {
+      "name": "front_02",
+      "kind": "front",
+      "avg_bits": 6.545454545454546,
+      "predicted": 0.016529850661754608,
+      "measured": 0.01668528675014125
+    },
+    {
+      "name": "front_03",
+      "kind": "front",
+      "avg_bits": 7.090909090909091,
+      "predicted": 0.013628031127154827,
+      "measured": 0.015188951573820386
+    },
+    {
+      "name": "front_04",
+      "kind": "front",
+      "avg_bits": 7.636363636363637,
+      "predicted": 0.009763912297785282,
+      "measured": 0.009475215072305865
+    },
+    {
+      "name": "front_05",
+      "kind": "front",
+      "avg_bits": 8.727272727272727,
+      "predicted": 0.0067183952778577805,
+      "measured": 0.006826440085712537
+    },
+    {
+      "name": "front_06",
+      "kind": "front",
+      "avg_bits": 9.272727272727273,
+      "predicted": 0.005168725736439228,
+      "measured": 0.0062893582205485465
+    },
+    {
+      "name": "front_07",
+      "kind": "front",
+      "avg_bits": 10.0,
+      "predicted": 0.0035884398967027664,
+      "measured": 0.004199891212659068
+    },
+    {
+      "name": "front_08",
+      "kind": "front",
+      "avg_bits": 11.090909090909092,
+      "predicted": 0.0023743165656924248,
+      "measured": 0.0032549843828904024
+    },
+    {
+      "name": "front_09",
+      "kind": "front",
+      "avg_bits": 12.0,
+      "predicted": 0.0013201702386140823,
+      "measured": 0.0018774448296960955
+    }
+  ],
+  "points_fake": [
+    {
+      "name": "uniform_fp16",
+      "kind": "doe",
+      "avg_bits": 16.0,
+      "predicted": 0.0,
+      "measured": 0.0
+    },
+    {
+      "name": "uniform_int8",
+      "kind": "doe",
+      "avg_bits": 8.0,
+      "predicted": 0.0003676116466522217,
+      "measured": 0.018846875378209393
+    },
+    {
+      "name": "uniform_int4",
+      "kind": "doe",
+      "avg_bits": 4.0,
+      "predicted": 0.09446055628359318,
+      "measured": 0.048624742132985954
+    },
+    {
+      "name": "alternating_4_8",
+      "kind": "doe",
+      "avg_bits": 6.0,
+      "predicted": 0.0445915749296546,
+      "measured": 0.03251669366135568
+    },
+    {
+      "name": "alternating_8_16",
+      "kind": "doe",
+      "avg_bits": 12.0,
+      "predicted": 2.456270158290863e-05,
+      "measured": 0.01068549400720853
+    },
+    {
+      "name": "random_00",
+      "kind": "random",
+      "avg_bits": 4.7272727272727275,
+      "predicted": 0.06888664793223143,
+      "measured": 0.037996870432144725
+    },
+    {
+      "name": "random_01",
+      "kind": "random",
+      "avg_bits": 5.2727272727272725,
+      "predicted": 0.06522446218878031,
+      "measured": 0.03701435826782484
+    },
+    {
+      "name": "random_02",
+      "kind": "random",
+      "avg_bits": 6.363636363636363,
+      "predicted": 0.06265378650277853,
+      "measured": 0.0415374694726407
+    },
+    {
+      "name": "random_03",
+      "kind": "random",
+      "avg_bits": 7.090909090909091,
+      "predicted": 0.05292241740971804,
+      "measured": 0.03276689663911503
+    },
+    {
+      "name": "random_04",
+      "kind": "random",
+      "avg_bits": 7.636363636363637,
+      "predicted": 0.029976283200085163,
+      "measured": 0.029485210190471456
+    },
+    {
+      "name": "random_05",
+      "kind": "random",
+      "avg_bits": 8.181818181818182,
+      "predicted": 0.03273286111652851,
+      "measured": 0.026629282674218935
+    },
+    {
+      "name": "random_06",
+      "kind": "random",
+      "avg_bits": 9.090909090909092,
+      "predicted": 0.04133796878159046,
+      "measured": 0.031511750791827
+    },
+    {
+      "name": "random_07",
+      "kind": "random",
+      "avg_bits": 10.181818181818182,
+      "predicted": 0.030656461603939533,
+      "measured": 0.015570013747256084
+    },
+    {
+      "name": "random_08",
+      "kind": "random",
+      "avg_bits": 10.545454545454545,
+      "predicted": 0.019664203748106956,
+      "measured": 0.020357608183836362
+    },
+    {
+      "name": "random_09",
+      "kind": "random",
+      "avg_bits": 11.454545454545455,
+      "predicted": 0.012622169218957424,
+      "measured": 0.01133235540145483
+    },
+    {
+      "name": "random_10",
+      "kind": "random",
+      "avg_bits": 12.363636363636363,
+      "predicted": 0.025679766200482845,
+      "measured": 0.01844971995068434
+    },
+    {
+      "name": "random_11",
+      "kind": "random",
+      "avg_bits": 12.909090909090908,
+      "predicted": 0.019178034737706184,
+      "measured": 0.011940076412298772
+    },
+    {
+      "name": "random_12",
+      "kind": "random",
+      "avg_bits": 13.818181818181818,
+      "predicted": 0.013123981654644012,
+      "measured": 0.01333765148097621
+    },
+    {
+      "name": "random_13",
+      "kind": "random",
+      "avg_bits": 14.727272727272727,
+      "predicted": 0.0016470085829496384,
+      "measured": 0.006544092373970134
+    },
+    {
+      "name": "random_14",
+      "kind": "random",
+      "avg_bits": 15.272727272727273,
+      "predicted": 6.4838677644729614e-06,
+      "measured": 0.0007457288921388638
+    },
+    {
+      "name": "front_00",
+      "kind": "front",
+      "avg_bits": 5.2727272727272725,
+      "predicted": 0.051557186990976334,
+      "measured": 0.030901383334755117
+    },
+    {
+      "name": "front_01",
+      "kind": "front",
+      "avg_bits": 5.818181818181818,
+      "predicted": 0.03458123095333576,
+      "measured": 0.02390470606649009
+    },
+    {
+      "name": "front_02",
+      "kind": "front",
+      "avg_bits": 6.545454545454546,
+      "predicted": 0.03202213067561388,
+      "measured": 0.01668528675014125
+    },
+    {
+      "name": "front_03",
+      "kind": "front",
+      "avg_bits": 7.090909090909091,
+      "predicted": 0.023579048924148083,
+      "measured": 0.015188951573820386
+    },
+    {
+      "name": "front_04",
+      "kind": "front",
+      "avg_bits": 7.636363636363637,
+      "predicted": 0.021125394850969315,
+      "measured": 0.009475215072305865
+    },
+    {
+      "name": "front_05",
+      "kind": "front",
+      "avg_bits": 8.727272727272727,
+      "predicted": 0.012295061722397804,
+      "measured": 0.006826440085712537
+    },
+    {
+      "name": "front_06",
+      "kind": "front",
+      "avg_bits": 9.272727272727273,
+      "predicted": 0.008433658629655838,
+      "measured": 0.0062893582205485465
+    },
+    {
+      "name": "front_07",
+      "kind": "front",
+      "avg_bits": 10.0,
+      "predicted": 0.005423388443887234,
+      "measured": 0.004199891212659068
+    },
+    {
+      "name": "front_08",
+      "kind": "front",
+      "avg_bits": 11.090909090909092,
+      "predicted": 0.0009183315560221672,
+      "measured": 0.0032549843828904024
+    },
+    {
+      "name": "front_09",
+      "kind": "front",
+      "avg_bits": 12.0,
+      "predicted": 0.002585606649518013,
+      "measured": 0.0018774448296960955
+    }
+  ],
+  "vram": {
+    "old_model_1024mb_constant": {
+      "rmse_vs_static_mb": 752.2332940179083,
+      "rmse_vs_peak_mb": 700.4282089004198,
+      "mean_overestimate_vs_peak_pct": 53.50416203723053
+    },
+    "static": {
+      "A": {
+        "form": "A",
+        "intercept_mb": 271.8105143229167,
+        "effective_bits": {
+          "4": 4.0,
+          "8": 8.0,
+          "16": 16.0
+        },
+        "loo_rmse_mb": 8.398207674268237,
+        "train_rmse_mb": 8.118267418459327
+      },
+      "B": {
+        "form": "B",
+        "intercept_mb": 258.3106390612745,
+        "effective_bits": {
+          "4": 4.258994278775543,
+          "8": 8.090065197931438,
+          "16": 16.0
+        },
+        "loo_rmse_mb": 2.9730460869007,
+        "train_rmse_mb": 2.362823110938847
+      }
+    },
+    "chosen_form": "B",
+    "peak_fit": {
+      "form": "B",
+      "intercept_mb": 307.4334483237656,
+      "effective_bits": {
+        "4": 4.327677261896477,
+        "8": 8.09154767236298,
+        "16": 16.0
+      },
+      "loo_rmse_mb": 3.931863117213505,
+      "train_rmse_mb": 3.0094368733650483
+    },
+    "bootstrap_ci_static": {
+      "intercept_mb": [
+        254.40498295852575,
+        261.89577437869553
+      ],
+      "e4": [
+        4.22424400718332,
+        4.294469644639979
+      ],
+      "e8": [
+        8.035991397974524,
+        8.170833048105482
+      ]
+    },
+    "bootstrap_ci_peak": {
+      "intercept_mb": [
+        304.20044707278214,
+        311.66213943578435
+      ],
+      "e4": [
+        4.2898537623197965,
+        4.366666961506325
+      ],
+      "e8": [
+        8.020849020182473,
+        8.185575577356568
+      ]
+    },
+    "points": [
+      {
+        "name": "uniform_fp16",
+        "avg_bits": 16.0,
+        "static_mb": 2098.17626953125,
+        "peak_mb": 2151.30517578125
+      },
+      {
+        "name": "uniform_int8",
+        "avg_bits": 8.0,
+        "static_mb": 1187.80517578125,
+        "peak_mb": 1233.05908203125
+      },
+      {
+        "name": "uniform_int4",
+        "avg_bits": 4.0,
+        "static_mb": 750.29833984375,
+        "peak_mb": 804.30615234375
+      },
+      {
+        "name": "alternating_4_8",
+        "avg_bits": 6.0,
+        "static_mb": 973.05224609375,
+        "peak_mb": 1026.56005859375
+      },
+      {
+        "name": "alternating_8_16",
+        "avg_bits": 12.0,
+        "static_mb": 1650.05419921875,
+        "peak_mb": 1695.30810546875
+      },
+      {
+        "name": "random_00",
+        "avg_bits": 4.7272727272727275,
+        "static_mb": 830.34521484375,
+        "peak_mb": 884.35302734375
+      },
+      {
+        "name": "random_01",
+        "avg_bits": 5.2727272727272725,
+        "static_mb": 889.50537109375,
+        "peak_mb": 945.01318359375
+      },
+      {
+        "name": "random_02",
+        "avg_bits": 6.363636363636363,
+        "static_mb": 1012.51708984375,
+        "peak_mb": 1067.52490234375
+      },
+      {
+        "name": "random_03",
+        "avg_bits": 7.090909090909091,
+        "static_mb": 1095.00537109375,
+        "peak_mb": 1149.51318359375
+      },
+      {
+        "name": "random_04",
+        "avg_bits": 7.636363636363637,
+        "static_mb": 1156.50732421875,
+        "peak_mb": 1210.01513671875
+      },
+      {
+        "name": "random_05",
+        "avg_bits": 8.181818181818182,
+        "static_mb": 1221.35888671875,
+        "peak_mb": 1273.36669921875
+      },
+      {
+        "name": "random_06",
+        "avg_bits": 9.090909090909092,
+        "static_mb": 1325.76708984375,
+        "peak_mb": 1378.27490234375
+      },
+      {
+        "name": "random_07",
+        "avg_bits": 10.181818181818182,
+        "static_mb": 1448.37060546875,
+        "peak_mb": 1501.87841796875
+      },
+      {
+        "name": "random_08",
+        "avg_bits": 10.545454545454545,
+        "static_mb": 1485.80224609375,
+        "peak_mb": 1539.81005859375
+      },
+      {
+        "name": "random_09",
+        "avg_bits": 11.454545454545455,
+        "static_mb": 1591.92724609375,
+        "peak_mb": 1646.93505859375
+      },
+      {
+        "name": "random_10",
+        "avg_bits": 12.363636363636363,
+        "static_mb": 1692.30224609375,
+        "peak_mb": 1745.81005859375
+      },
+      {
+        "name": "random_11",
+        "avg_bits": 12.909090909090908,
+        "static_mb": 1755.62060546875,
+        "peak_mb": 1803.12841796875
+      },
+      {
+        "name": "random_12",
+        "avg_bits": 13.818181818181818,
+        "static_mb": 1859.37060546875,
+        "peak_mb": 1905.37841796875
+      },
+      {
+        "name": "random_13",
+        "avg_bits": 14.727272727272727,
+        "static_mb": 1963.12060546875,
+        "peak_mb": 2011.62841796875
+      },
+      {
+        "name": "random_14",
+        "avg_bits": 15.272727272727273,
+        "static_mb": 2025.43896484375,
+        "peak_mb": 2069.69287109375
+      },
+      {
+        "name": "front_00",
+        "avg_bits": 5.2727272727272725,
+        "static_mb": 892.00537109375,
+        "peak_mb": 945.01318359375
+      },
+      {
+        "name": "front_01",
+        "avg_bits": 5.818181818181818,
+        "static_mb": 949.32373046875,
+        "peak_mb": 1003.33154296875
+      },
+      {
+        "name": "front_02",
+        "avg_bits": 6.545454545454546,
+        "static_mb": 1033.90380859375,
+        "peak_mb": 1087.41162109375
+      },
+      {
+        "name": "front_03",
+        "avg_bits": 7.090909090909091,
+        "static_mb": 1096.56396484375,
+        "peak_mb": 1149.07177734375
+      },
+      {
+        "name": "front_04",
+        "avg_bits": 7.636363636363637,
+        "static_mb": 1158.38232421875,
+        "peak_mb": 1211.89013671875
+      },
+      {
+        "name": "front_05",
+        "avg_bits": 8.727272727272727,
+        "static_mb": 1280.14404296875,
+        "peak_mb": 1332.65185546875
+      },
+      {
+        "name": "front_06",
+        "avg_bits": 9.272727272727273,
+        "static_mb": 1342.96240234375,
+        "peak_mb": 1394.97021484375
+      },
+      {
+        "name": "front_07",
+        "avg_bits": 10.0,
+        "static_mb": 1422.66748046875,
+        "peak_mb": 1476.67529296875
+      },
+      {
+        "name": "front_08",
+        "avg_bits": 11.090909090909092,
+        "static_mb": 1546.80419921875,
+        "peak_mb": 1597.81201171875
+      },
+      {
+        "name": "front_09",
+        "avg_bits": 12.0,
+        "static_mb": 1654.21240234375,
+        "peak_mb": 1702.72021484375
+      }
+    ]
+  }
+}

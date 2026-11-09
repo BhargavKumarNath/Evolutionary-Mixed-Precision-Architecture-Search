@@ -1,0 +1,11 @@
+{
+  "intercept_mb": 307.4334483237656,
+  "effective_bits": {
+    "4": 4.327677261896477,
+    "8": 8.09154767236298,
+    "16": 16.0
+  },
+  "form": "B",
+  "target": "peak allocated MiB, batch 1 x 512 forward",
+  "loo_rmse_mb": 3.931863117213505
+}

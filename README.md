@@ -1,12 +1,21 @@
 # EMPAS: Evolutionary Mixed-Precision Architecture Search
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python) ![PyTorch](https://img.shields.io/badge/PyTorch-2.9.1-red?logo=pytorch) ![Transformers](https://img.shields.io/badge/HuggingFace-4.57.3-yellow?logo=huggingface) ![CUDA](https://img.shields.io/badge/NVIDIA-CUDA%2012.8-green?logo=nvidia) ![Tests](https://img.shields.io/badge/Tests-56/56-brightgreen) ![Status](https://img.shields.io/badge/Status-Stabilized%20at%20Phase%206-brightgreen)
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python) ![PyTorch](https://img.shields.io/badge/PyTorch-2.9.1-red?logo=pytorch) ![Transformers](https://img.shields.io/badge/HuggingFace-4.57.3-yellow?logo=huggingface) ![CUDA](https://img.shields.io/badge/NVIDIA-CUDA%2012.8-green?logo=nvidia) ![Tests](https://img.shields.io/badge/Tests-74/74-brightgreen) ![Status](https://img.shields.io/badge/Status-Stabilized%20at%20Phase%206-brightgreen)
 
 ## Executive Summary
 
 **EMPAS** is a research platform for discovering layer-wise mixed-precision quantization configurations for Large Language Models using evolutionary algorithms (NSGA-II).
 
 **Project status:** the original modernization plan for this codebase specified 14 phases. Phases 1-6 were executed, tested, and verified on real GPU hardware; the project was then deliberately concluded and stabilized at that point. Phases 7-14 (measured Pareto optimization, strong baselines, hardware-aware analysis reports, provenance schemas, CI, serving/dashboard hardening, and advanced optimization) were scoped but are **not implemented**; see [Out of Scope: Phases 7-14](#out-of-scope-phases-7-14) below.
+
+### Evaluation results (Phase 3, 2026-11)
+
+Full tables, protocol and deviations: [`results/phase3/SUMMARY.md`](results/phase3/SUMMARY.md) and [`docs/phase3_protocol.md`](docs/phase3_protocol.md). This section supersedes the earlier single-run numbers further down.
+
+- **Proxy vs hardware:** rebuilt from the real bitsandbytes backend and checked on 30 genomes over the full validation split (299,520 tokens): Pearson r = 0.988 (95% CI 0.975-0.997), Spearman 0.988. The original fake-quantizer proxy gets r = 0.933 on the same genomes. The earlier r = 0.940 (n = 5) is superseded.
+- **Same bit budget, held-out test split (340,992 tokens, evaluated once):** the exact DP optimum of the additive proxy loses 9.1 millinats vs FP16 at an 8-bit budget, uniform int8 loses 18.0. NSGA-II beats random search at every budget and is within about 1 millinat of the exact DP, but it does **not** beat the DP or greedy in general. For an additive proxy the DP solves the problem exactly; the GA is not justified by this problem alone.
+- **VRAM:** the 1024 MB guess overestimated peak memory by 53%. Fitted intercept 307 MiB, 4.33 effective bits per 4-bit weight, leave-one-out RMSE 3.9 MiB.
+- **Latency:** with warm-up and interleaved repeats, quantized decode is slower than FP16 (4-bit 14.2 ms vs 10.9 ms per token; 8-bit 22.4 ms). The earlier "2-3x lower latency" was a cold-start artefact and is withdrawn. The search's latency score had the wrong sign and was dropped from the objectives.
 
 ### What's Implemented
 
@@ -24,7 +33,7 @@
 
 ### Key Achievements
 
-- **56 unit tests**, all passing across all phases (39 original + 17 covering Phase 3 non-dominated sorting, crowding distance, and end-to-end GA behavior)
+- **74 unit tests**, all passing (39 original + 17 for NSGA-II + 18 for the Phase 3 evaluation tooling)
 - **Real GPU execution** via bitsandbytes (4-bit, 8-bit, FP16 passthrough)
 - **Hardware measurement** with CUDA synchronization, percentile statistics, memory tracking
 - **Reproducible experiments** with configuration authority, RNG checkpointing, dataset fingerprints
@@ -251,7 +260,7 @@ Measured Pareto Frontier + Analysis Reports
 
 | Correlation (proxy quality-loss delta vs. measured) | Pearson r |
 |:---|:---:|
-| → measured validation loss | **0.940** |
+| → measured validation loss | **0.940** (n = 5, superseded by the 30-genome result above) |
 | → measured peak memory | -0.789 |
 | → measured latency | -0.282 |
 
@@ -335,7 +344,7 @@ streamlit run src/demo/app.py
 
 ## Example Run (Single Runs, TinyLlama-1.1B, RTX 4070 Laptop GPU)
 
-These are actual outputs from the commands above on this hardware, not a systematic study: each is one run, and neither uses a synchronized/warmed-up latency protocol (that harness exists as of Phase 5 but isn't wired into these two legacy comparison paths). Treat the loss/perplexity numbers as reproducible and the latency/throughput numbers as indicative only.
+These are actual outputs from the commands above on this hardware, not a systematic study: each is one run, and neither uses a synchronized/warmed-up latency protocol (that harness exists as of Phase 5 but isn't wired into these two legacy comparison paths). These two tables are the original single runs on 4 x 128 tokens; the loss/perplexity and latency figures in them are superseded by the Phase 3 results above (the latency claim in particular does not survive a warmed-up, repeated measurement).
 
 **`validate_candidate.py`** (bitsandbytes backend, held-out validation split, genome `[4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4,8,16,4]`):
 
@@ -360,7 +369,7 @@ VRAM is identical across rows here because this script's quantizer dequantizes b
 
 ## Test Suite
 
-**Total: 56 tests, all passing**
+**Total: 74 tests, all passing**
 
 ```bash
 pytest tests/ -v
@@ -459,13 +468,13 @@ See `requirements.txt` for complete list.
 
 ## Out of Scope: Phases 7-14
 
-The original modernization plan for this codebase continued through Phase 14: measured Pareto optimization, strong baselines (FP16/INT8/INT4/published mixed-precision comparisons), hardware-aware analysis reports, experiment provenance schemas, CI, serving/dashboard hardening, and advanced optimization (learned surrogates, custom kernels, multi-GPU search). **That work was not started.** The project was deliberately stabilized and concluded at the end of Phase 6: the reproducible search, real GPU backend, benchmark harness, and proxy calibration all work and are tested, but there is no measured Pareto frontier, no baseline comparison table, and no hardware-aware analysis report produced by this repository. Numbers in this README (loss, latency, compression) come from individual example runs of the existing scripts, not from a systematic measured study across baselines.
+The original modernization plan for this codebase continued through Phase 14: measured Pareto optimization, strong baselines (FP16/INT8/INT4/published mixed-precision comparisons), hardware-aware analysis reports, experiment provenance schemas, CI, serving/dashboard hardening, and advanced optimization (learned surrogates, custom kernels, multi-GPU search). **That work was not started.** The project was deliberately stabilized and concluded at the end of Phase 6: the reproducible search, real GPU backend, benchmark harness, and proxy calibration all work and are tested, but as of the Phase 3 evaluation (2026-11) the repository does contain a matched-budget baseline comparison against uniform, random, greedy and exact-DP methods (`results/phase3/`), but still no measured (hardware-in-the-loop) Pareto frontier, no hardware-aware analysis report, no CI, and no comparison against published mixed-precision methods. Numbers in this README (loss, latency, compression) come from individual example runs of the existing scripts, not from a systematic measured study across baselines.
 
 ---
 
 ## Key Results Summary
 
-**Status:** All 56 tests passing. Phases 1-6 complete; phases 7-14 out of scope (see above).
+**Status:** All 74 tests passing. Phases 1-6 complete; phases 7-14 out of scope (see above).
 
 | Component | Status | Evidence |
 |:----------|:-------|:---------|

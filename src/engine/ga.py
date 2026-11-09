@@ -62,6 +62,20 @@ class GAEngine:
                 fitnesses.append(fit)
         return fitnesses
 
+    def _feasible_or(self, child: Genome, parent: Genome) -> Genome:
+        """Repair an infeasible child into the average-bit range; fall back to the parent."""
+        if self.space.validate(child):
+            return child
+        repair = getattr(self.space, "repair", None)
+        if repair is not None:
+            try:
+                fixed = repair(child)
+                if self.space.validate(fixed):
+                    return fixed
+            except RuntimeError:
+                pass
+        return parent
+
     def select_tournament(
         self,
         population: list[Genome],
@@ -155,10 +169,8 @@ class GAEngine:
             c1 = mutate_random_gene(c1, mutation_space, self.cfg['mutation_rate'])
             c2 = mutate_random_gene(c2, mutation_space, self.cfg['mutation_rate'])
 
-            if not self.space.validate(c1):
-                c1 = p1
-            if not self.space.validate(c2):
-                c2 = p2
+            c1 = self._feasible_or(c1, p1)
+            c2 = self._feasible_or(c2, p2)
 
             offspring.append(c1)
             if len(offspring) < pop_size:

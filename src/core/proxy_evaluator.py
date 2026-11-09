@@ -8,7 +8,8 @@ from .search_space import Genome
 logger = logging.getLogger(__name__)
 
 class ProxyEvaluator(Evaluator):
-    def __init__(self, profile_path: str):
+    def __init__(self, profile_path: str, memory_model_path: str | None = None,
+                 latency_mode: str = 'bits_proxy'):
         if not os.path.exists(profile_path):
             raise FileNotFoundError(f"Profile not found at {profile_path}. Run profile_sensitivity.py first")
         
@@ -19,7 +20,17 @@ class ProxyEvaluator(Evaluator):
         self.sensitivity = data['sensitivity']
         self.layer_params = data['layer_params']
 
+        if latency_mode not in ('bits_proxy', 'none'):
+            raise ValueError(f"latency_mode must be 'bits_proxy' or 'none', got {latency_mode!r}")
+        self.latency_mode = latency_mode
         self.context_overhead_mb = 1024.0
+        # effective bits stored per weight, by nominal bit-width. Defaults to the nominal width.
+        self.effective_bits: dict[int, float] = {}
+        if memory_model_path is not None:
+            with open(memory_model_path, 'r') as f:
+                mm = json.load(f)
+            self.context_overhead_mb = float(mm['intercept_mb'])
+            self.effective_bits = {int(k): float(v) for k, v in mm.get('effective_bits', {}).items()}
 
     def evaluate(self, genome: Genome) -> FitnessMetrics:
         """Predict metrics based on the genome configuration."""
@@ -40,7 +51,7 @@ class ProxyEvaluator(Evaluator):
             # Params * (bits / 8) = bytes
             params = self.layer_params.get(str(i), 0)
 
-            total_weight_size_bytes += params * (bits / 8.0)
+            total_weight_size_bytes += params * (self.effective_bits.get(bits, float(bits)) / 8.0)
 
             # 3. Latency Proxy
             weighted_bits += bits
@@ -55,5 +66,5 @@ class ProxyEvaluator(Evaluator):
         return FitnessMetrics(
             mean_loss=predicted_loss,
             peak_memory_mb=total_vram,
-            latency_ms=latency_proxy
+            latency_ms=latency_proxy if self.latency_mode == 'bits_proxy' else 0.0
         )

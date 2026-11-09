@@ -1,35 +1,38 @@
 {
-    "archetype": "balanced",
-    "metrics": {
-        "predicted_loss": 3.313620865345001,
-        "predicted_vram_mb": 1696.0,
-        "predicted_latency_score": 36.36363636363637
-    },
-    "config": {
-        "base_model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-        "quantization_map": {
-            "layer_0": 8,
-            "layer_1": 4,
-            "layer_2": 8,
-            "layer_3": 8,
-            "layer_4": 4,
-            "layer_5": 4,
-            "layer_6": 4,
-            "layer_7": 8,
-            "layer_8": 4,
-            "layer_9": 8,
-            "layer_10": 4,
-            "layer_11": 4,
-            "layer_12": 8,
-            "layer_13": 4,
-            "layer_14": 8,
-            "layer_15": 8,
-            "layer_16": 4,
-            "layer_17": 4,
-            "layer_18": 4,
-            "layer_19": 4,
-            "layer_20": 8,
-            "layer_21": 8
-        }
+  "archetype": "balanced",
+  "metrics": {
+    "predicted_loss": 2.404188415966928,
+    "predicted_delta_loss": 0.012548191472887993,
+    "predicted_vram_mb": 1149.2018124375325,
+    "measured_validation_delta_loss": 0.013435118830102122,
+    "measured_peak_vram_mb": 1149.35498046875
+  },
+  "provenance": "results/phase3 reference search, seed 0, pop 50 x 40 generations, bnb proxy + fitted memory model",
+  "config": {
+    "base_model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "quantization_map": {
+      "layer_0": 4,
+      "layer_1": 16,
+      "layer_2": 16,
+      "layer_3": 4,
+      "layer_4": 4,
+      "layer_5": 4,
+      "layer_6": 8,
+      "layer_7": 8,
+      "layer_8": 4,
+      "layer_9": 4,
+      "layer_10": 4,
+      "layer_11": 4,
+      "layer_12": 8,
+      "layer_13": 4,
+      "layer_14": 8,
+      "layer_15": 8,
+      "layer_16": 8,
+      "layer_17": 4,
+      "layer_18": 8,
+      "layer_19": 8,
+      "layer_20": 4,
+      "layer_21": 16
     }
+  }
 }

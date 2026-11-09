@@ -116,11 +116,11 @@ def crowding_distance(front: list[int], population_fitness: list[FitnessMetrics]
         obj_max = population_fitness[front_sorted[-1]].to_tuple()[obj_idx]
         obj_range = obj_max - obj_min
 
+        if obj_range == 0:
+            continue  # degenerate objective: carries no diversity information
+
         distance[front_sorted[0]] = math.inf
         distance[front_sorted[-1]] = math.inf
-
-        if obj_range == 0:
-            continue
 
         for k in range(1, len(front_sorted) - 1):
             prev_val = population_fitness[front_sorted[k - 1]].to_tuple()[obj_idx]

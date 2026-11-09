@@ -15,3 +15,7 @@ data/manifests/
 data/profiles/
 data/logs/*/checkpoint_*.json
 data/logs/*/wandb/
+.vscode/
+CLAUDE.md
+docs/
+.gitignore
